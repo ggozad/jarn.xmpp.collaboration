@@ -6,6 +6,7 @@ from jarn.xmpp.collaboration.dmp import diff_match_patch as dmp
 class DiffMatchPatchTest(unittest.TestCase):
 
     def setUp(self):
+
         self.original = \
             """
             Hamlet: Do you see yonder cloud that's almost in shape of a camel?
@@ -15,6 +16,7 @@ class DiffMatchPatchTest(unittest.TestCase):
             Hamlet: Or like a whale?
             Polonius: Very like a whale.
             """
+
         self.plain = \
             """
             Hamlet: Do you see the cloud over there that's almost the shape of a camel?
@@ -24,6 +26,7 @@ class DiffMatchPatchTest(unittest.TestCase):
             Hamlet: Or like a whale?
             Polonius: It's totally like a whale.
             """
+
         self.trekkie = \
             """
             Kirk: Do you see yonder cloud that's almost in shape of a Klingon?
@@ -33,6 +36,7 @@ class DiffMatchPatchTest(unittest.TestCase):
             Kirk: Or like a Romulan?
             Spock: Very like a Romulan.
             """
+
         self.final = \
             """
             Kirk: Do you see the cloud over there that's almost the shape of a Klingon?
