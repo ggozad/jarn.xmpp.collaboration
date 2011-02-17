@@ -2,6 +2,8 @@ from zope.interface import implements
 from wokkel import disco, iwokkel
 from wokkel.subprotocols import XMPPHandler
 
+from jarn.xmpp.collaboration.interfaces import ICollaborativeEditing
+
 NS_CE= 'http://jarn.com/ns/collaborative-editing'
 PRESENCE = "/presence/collaborate[@xmlns='%s']" % NS_CE
 CE_REQUEST = "/iq[@type='get']/collaborate[@xmlns='%s']" % NS_CE
@@ -15,7 +17,7 @@ class CollaborativeEditingHandler(XMPPHandler):
     """
     """
 
-    implements(iwokkel.IDisco)
+    implements(ICollaborativeEditing, iwokkel.IDisco)
 
     def connectionInitialized(self):
         self.xmlstream.addObserver(CE_REQUEST, self.onRequest)
