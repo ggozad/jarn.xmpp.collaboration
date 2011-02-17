@@ -1,0 +1,11 @@
+<configure
+    xmlns="http://namespaces.zope.org/zope"
+    i18n_domain="jarn.xmpp.collaboration">
+
+  <!-- Start up -->
+  <subscriber
+    for="jarn.xmpp.twisted.interfaces.ReactorStarted"
+    handler=".startup.setupCollaborationComponent"
+    />
+
+</configure>

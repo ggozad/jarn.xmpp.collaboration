@@ -3,6 +3,7 @@
     xmlns:five="http://namespaces.zope.org/five"
     i18n_domain="jarn.xmpp.collaboration">
 
-  <five:registerPackage package="." initialize=".initialize" />
+  <include package="jarn.xmpp.twisted" />
+  <include package="jarn.xmpp.core" />
 
 </configure>
