@@ -1,0 +1,3 @@
+<script src="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js"></script>
+<script src="++resource++jarn.xmpp.collaboration.js/collaborate.js"></script>
+<script tal:content="view/setup"></script>

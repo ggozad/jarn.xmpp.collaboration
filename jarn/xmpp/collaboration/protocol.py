@@ -100,6 +100,8 @@ class CollaborativeEditingHandler(XMPPHandler):
             # Maybe revert the patch?
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
+        else:
+            logger.info('Patches node %s to %s' % (node, new_text))
 
         self.shadow_copies[node] = new_text
 
@@ -145,7 +147,7 @@ class CollaborativeEditingHandler(XMPPHandler):
 
         This method is to meant to be overriden by components.
         """
-        return ''
+        return 'Welcome to Plone'
 
     def setNodeText(self, node):
         """

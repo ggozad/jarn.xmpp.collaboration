@@ -1,12 +1,20 @@
 <configure
   xmlns="http://namespaces.zope.org/zope"
   xmlns:browser="http://namespaces.zope.org/browser"
-  xmlns:plone="http://namespaces.plone.org/plone"
   i18n_domain="jarn.xmpp.collaboration">
+
+  <browser:viewlet
+    name="jarn.xmpp.collaborate.collaborativeediting"
+    for="Products.CMFCore.interfaces.IContentish"
+    manager="plone.app.layout.viewlets.interfaces.IBelowContent"
+    class=".collaborate.CollaborateViewlet"
+    template="collaborate.pt"
+    permission="zope2.View"
+    />
 
   <browser:resourceDirectory
     name="jarn.xmpp.collaboration.js"
     directory="js"
-  />
+    />
 
 </configure>
