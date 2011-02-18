@@ -10,18 +10,21 @@ from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE= 'http://jarn.com/ns/collaborative-editing'
 CE_PRESENCE = "/presence"
-CE_REQUEST = "/iq[@type='get']/query[@xmlns='%s']" % NS_CE
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
 logger= logging.getLogger('jarn.xmpp.collaboration')
 
 
 class CollaborativeEditingClientProtocol(XMPPHandler):
+    """
+    Client protocol for Collaborative Editing.
+    """
     pass
 
 
 class CollaborativeEditingHandler(XMPPHandler):
     """
+    Server protocol for Collaborative Editing.
     """
 
     implements(ICollaborativeEditing, iwokkel.IDisco)
@@ -33,7 +36,6 @@ class CollaborativeEditingHandler(XMPPHandler):
 
     def connectionInitialized(self):
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
-        self.xmlstream.addObserver(CE_REQUEST, self._onIQRequest)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
         logger.info('Collaboration component connected.')
 
