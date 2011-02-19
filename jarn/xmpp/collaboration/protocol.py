@@ -51,6 +51,9 @@ class CollaborativeEditingHandler(XMPPHandler):
                 self.node_participants[node].remove(sender)
                 self.userLeft(node, sender)
             del self.participant_nodes[sender]
+            if not self.node_participants[node]:
+                del self.node_participants[node]
+                del self.shadow_copies[node]
             return
 
         query = presence.query
