@@ -22,12 +22,16 @@ jarnxmpp.ce = {
             var selector = '#' + node;
             var patch_text = $(this).text();
             if (action === 'patch') {
-                var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
-                var shadow = jarnxmpp.ce.shadow_copies[node];
-                var results = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
-                var shadow = results[0];
-                jarnxmpp.ce.shadow_copies[node] = shadow;
-                $(selector).text(shadow);
+                $(selector).queue('ce', function() {
+                    var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
+                    var shadow = jarnxmpp.ce.shadow_copies[node];
+                    var results = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
+                    var shadow = results[0];
+                    jarnxmpp.ce.shadow_copies[node] = shadow;
+                    $(selector).text(shadow);
+                    $(selector).dequeue('ce');
+                });
+                $(selector).dequeue('ce');
             }
         });
         return true;
