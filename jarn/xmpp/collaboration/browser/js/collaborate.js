@@ -19,14 +19,14 @@ jarnxmpp.ce = {
         $(msg).find('item').each(function () {
             var node = $(this).attr('node');
             var action = $(this).attr('action');
+            var selector = '#' + node;
+            var patch_text = $(this).text();
             if (action === 'patch') {
-                var patch_text = $(this).text();
                 var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                 var shadow = jarnxmpp.ce.shadow_copies[node];
                 var results = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
-                shadow = results[0];
+                var shadow = results[0];
                 jarnxmpp.ce.shadow_copies[node] = shadow;
-                selector = '#' + node;
                 $(selector).text(shadow);
             }
         });
