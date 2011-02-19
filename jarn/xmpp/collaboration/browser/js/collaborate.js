@@ -5,10 +5,12 @@ jarnxmpp.ce = {
     shadow_copies: {},
 
     _setupNode: function (id) {
-        selector = '#' + id;
-        jarnxmpp.ce.shadow_copies[id] = $.trim($(selector).text());
+        var selector = '#' + id;
+        var text = $.trim($(selector).text());
+        $(selector).text(text);
+        jarnxmpp.ce.shadow_copies[id] = text;
         $(selector).attr('contenteditable', true).addClass('jarnxmpp-ceditable');
-        presence = $pres({to: jarnxmpp.ce.component})
+        var presence = $pres({to: jarnxmpp.ce.component})
             .c('query', {xmlns: jarnxmpp.ce.NS, 'node':id});
         jarnxmpp.connection.send(presence);
     },
@@ -42,10 +44,10 @@ $('.jarnxmpp-ceditable').live('focus', function() {
 
 $('.jarnxmpp-ceditable').live('jarnxmpp.ce.nodeChanged', function (event) {
     var shadow =  jarnxmpp.ce.shadow_copies[this.id];
-    var current = $.trim($(this).text());
+    var current = $(this).text();
     var diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true);
     if (diff.length<2) return true;
-
+    jarnxmpp.ce.dmp.diff_cleanupSemantic(diff);
     var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
     var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[this.id] = current;
