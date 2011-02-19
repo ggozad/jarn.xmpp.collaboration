@@ -47,13 +47,15 @@ class CollaborativeEditingHandler(XMPPHandler):
         type = presence.getAttribute('type')
 
         if type=='unavailable':
-            for node in self.participant_nodes[sender]:
-                self.node_participants[node].remove(sender)
-                self.userLeft(node, sender)
-            del self.participant_nodes[sender]
-            if not self.node_participants[node]:
-                del self.node_participants[node]
-                del self.shadow_copies[node]
+            if sender in self.participant_nodes:
+                for node in self.participant_nodes[sender]:
+                    self.node_participants[node].remove(sender)
+                    self.userLeft(node, sender)
+                    if not self.node_participants[node]:
+                        del self.node_participants[node]
+                        del self.shadow_copies[node]
+                del self.participant_nodes[sender]
+
             return
 
         query = presence.query
