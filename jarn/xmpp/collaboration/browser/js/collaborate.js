@@ -22,14 +22,23 @@ jarnxmpp.ce = {
             var selector = '#' + node;
             var patch_text = $(this).text();
             if (action === 'patch') {
+                //
+                // XXX: This should be queued differently including the above...
+                //
                 $(selector).queue('ce', function() {
                     var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                     var shadow = jarnxmpp.ce.shadow_copies[node];
-                    var results = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
-                    var shadow = results[0];
+                    var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
+                    var shadow = patch_applications[0];
+                    var results = patch_applications[1];
+                    for (var i in results) {
+                        // XXX: Do something about it!
+                        if (results[i]!=true) {
+                            console.log('Failure at applying patch:'+i+'of '+results.length);
+                        }
+                    }
                     jarnxmpp.ce.shadow_copies[node] = shadow;
                     $(selector).text(shadow);
-                    $(selector).dequeue('ce');
                 });
                 $(selector).dequeue('ce');
             }
@@ -51,7 +60,7 @@ $('.jarnxmpp-ceditable').live('jarnxmpp.ce.nodeChanged', function (event) {
     var current = $(this).text();
     var diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true);
     if (diff.length<2) return true;
-    jarnxmpp.ce.dmp.diff_cleanupSemantic(diff);
+    jarnxmpp.ce.dmp.diff_cleanupEfficiency(diff);
     var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
     var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[this.id] = current;
@@ -65,6 +74,8 @@ $('.jarnxmpp-ceditable').live('jarnxmpp.ce.nodeChanged', function (event) {
 
 
 $(document).bind('jarnxmpp.connected', function () {
+    jarnxmpp.ce.dmp.Match_Threshold=0.5;
+    jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
     jarnxmpp.ce._setupNode('parent-fieldname-title')
     jarnxmpp.connection.addHandler(jarnxmpp.ce.patchReceived, null, 'message', null, null, jarnxmpp.ce.component);
 });
