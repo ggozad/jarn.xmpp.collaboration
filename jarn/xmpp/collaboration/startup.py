@@ -5,7 +5,7 @@ from jarn.xmpp.core.interfaces import IXMPPSettings
 from jarn.xmpp.twisted.component import XMPPComponent
 
 from jarn.xmpp.collaboration.interfaces import ICollaborativeEditingComponent
-from jarn.xmpp.collaboration.protocol import CollaborativeEditingHandler
+from jarn.xmpp.collaboration.protocol import DifferentialSyncronisationHandler
 
 
 def setupCollaborationComponent(event):
@@ -15,5 +15,5 @@ def setupCollaborationComponent(event):
                               5347,
                               'collaboration.localhost',
                               'secret',
-                              [CollaborativeEditingHandler()])
+                              [DifferentialSyncronisationHandler()])
     gsm.registerUtility(component, ICollaborativeEditingComponent)

@@ -5,7 +5,7 @@ from zope.interface import implements
 from wokkel import disco, iwokkel
 from wokkel.subprotocols import XMPPHandler
 
-from jarn.xmpp.collaboration.interfaces import ICollaborativeEditing
+from jarn.xmpp.collaboration.interfaces import IDifferentialSyncronisation
 from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE= 'http://jarn.com/ns/collaborative-editing'
@@ -15,19 +15,19 @@ CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 logger= logging.getLogger('jarn.xmpp.collaboration')
 
 
-class CollaborativeEditingClientProtocol(XMPPHandler):
+class DifferentialSyncronisationClientProtocol(XMPPHandler):
     """
     Client protocol for Collaborative Editing.
     """
     pass
 
 
-class CollaborativeEditingHandler(XMPPHandler):
+class DifferentialSyncronisationHandler(XMPPHandler):
     """
     Server protocol for Collaborative Editing.
     """
 
-    implements(ICollaborativeEditing, iwokkel.IDisco)
+    implements(IDifferentialSyncronisation, iwokkel.IDisco)
 
     node_participants = {}
     participant_nodes = {}
