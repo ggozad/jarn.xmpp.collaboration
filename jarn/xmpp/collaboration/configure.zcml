@@ -6,5 +6,6 @@
   <include package="jarn.xmpp.twisted" />
   <include package="jarn.xmpp.core" />
 
+  <include package=".adapters" />
   <include package=".browser" />
 </configure>
