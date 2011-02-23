@@ -3,16 +3,19 @@ jarnxmpp.ce = {
     NS : 'http://jarn.com/ns/collaborative-editing',
     dmp : new diff_match_patch(),
     shadow_copies: {},
+    last_update: {},
 
     _setupNode: function (id) {
         var selector = '#' + id;
         var text = $.trim($(selector).text());
         $(selector).text(text);
         jarnxmpp.ce.shadow_copies[id] = text;
+        jarnxmpp.ce.last_update[id] = new Date().getTime();
         $(selector).attr('contenteditable', true).addClass('jarnxmpp-ceditable');
         var presence = $pres({to: jarnxmpp.ce.component})
             .c('query', {xmlns: jarnxmpp.ce.NS, 'node':id});
         jarnxmpp.connection.send(presence);
+
     },
 
     patchReceived: function (msg) {
@@ -47,12 +50,20 @@ jarnxmpp.ce = {
     }
 };
 
-$('.jarnxmpp-ceditable').live('focus', function() {
-    before = $(this).text();
-}).live('blur keyup paste', function() {
-    if (before != $(this).text()) {
-        $(this).trigger('jarnxmpp.ce.nodeChanged');
+$('.jarnxmpp-ceditable').live('blur keyup paste', function() {
+    var now = new Date().getTime();
+    if ((now-jarnxmpp.ce.last_update[this.id]) < 500.0) {
+        $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 500, function() {
+            var now = new Date().getTime();
+            jarnxmpp.ce.last_update[this.id] = now;
+            $(this).trigger('jarnxmpp.ce.nodeChanged');
+        });
+        return true;
     }
+    $.doTimeout('jarnxmpp.ce.delayedNodeChanged');
+    jarnxmpp.ce.last_update[this.id] = now;
+    $(this).trigger('jarnxmpp.ce.nodeChanged');
+    return true;
 });
 
 $('.jarnxmpp-ceditable').live('jarnxmpp.ce.nodeChanged', function (event) {
