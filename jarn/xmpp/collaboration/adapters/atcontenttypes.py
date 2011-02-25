@@ -23,10 +23,17 @@ class ATContentTypeCEAdapterBase(object):
         return [self._htmlIDToNodeId(html_id) for html_id in self.htmlIDs]
 
     @property
-    def nodeMap(self):
+    def nodeToId(self):
         r = dict()
         for html_id in self.htmlIDs:
             r[self._htmlIDToNodeId(html_id)] = html_id
+        return r
+
+    @property
+    def idToNode(self):
+        r = dict()
+        for html_id in self.htmlIDs:
+            r[html_id] = self._htmlIDToNodeId(html_id)
         return r
 
     def _htmlIDToNodeId(self, html_id):

@@ -1,9 +1,12 @@
+import json
 import logging
 
 from plone.app.layout.viewlets.common import ViewletBase
 from zope.component import getUtility
 
 from jarn.xmpp.core.interfaces import IXMPPSettings
+from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
+
 
 logger = logging.getLogger('jarn.xmpp.collaborate')
 
@@ -17,12 +20,23 @@ class CollaborateViewlet(ViewletBase):
         self.settings = getUtility(IXMPPSettings)
 
     @property
-    def html_ids(self):
-        return ['parent-fieldname-title']
+    def nodeToId(self):
+        try:
+            return json.dumps(ICollaborativelyEditable(self.context).nodeToId)
+        except TypeError:
+            return '{}'
+
+    @property
+    def idToNode(self):
+        try:
+            return json.dumps(ICollaborativelyEditable(self.context).idToNode)
+        except TypeError:
+            return '{}'
 
     @property
     def setup(self):
         return """
         jarnxmpp.ce.component = 'collaboration.localhost';
-        jarnxmpp.ce.html_ids =  %s;
-        """ % (str(self.html_ids))
+        jarnxmpp.ce.nodeToId = %s;
+        jarnxmpp.ce.idToNode = %s;
+        """ % (self.nodeToId, self.idToNode)

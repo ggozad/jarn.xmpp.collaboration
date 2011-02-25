@@ -5,7 +5,7 @@
   <!-- Start up -->
   <subscriber
     for="jarn.xmpp.twisted.interfaces.ReactorStarted"
-    handler=".startup.setupCollaborationComponent"
+    handler=".component.setupCollaborationComponent"
     />
 
 </configure>
