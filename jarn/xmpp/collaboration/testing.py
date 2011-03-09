@@ -1,5 +1,5 @@
 from plone.app.testing import PloneSandboxLayer
-#from plone.app.testing import applyProfile
+from plone.app.testing import applyProfile
 from plone.app.testing import IntegrationTesting, FunctionalTesting
 from zope.configuration import xmlconfig
 
@@ -17,8 +17,7 @@ class CollaborationFixture(PloneSandboxLayer):
                        context=configurationContext)
 
     def setUpPloneSite(self, portal):
-        pass
-        #applyProfile(portal, 'jarn.xmpp.collaboration:default')
+        applyProfile(portal, 'jarn.xmpp.collaboration:default')
 
 COLLABORATION_FIXTURE = CollaborationFixture()
 

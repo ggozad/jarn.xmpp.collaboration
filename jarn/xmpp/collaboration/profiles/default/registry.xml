@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<registry>
+
+  <record name="jarn.xmpp.collaborationJID">
+    <field type="plone.registry.field.ASCIILine">
+      <title>PubSub JID</title>
+    </field>
+    <value>collaboration.localhost</value>
+  </record>
+
+</registry>

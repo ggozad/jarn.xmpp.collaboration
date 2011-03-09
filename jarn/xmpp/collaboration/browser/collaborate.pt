@@ -1,4 +1,6 @@
-<script src="++resource++jarn.xmpp.collaboration.js/jquery.ba-dotimeout.min.js"></script>
-<script src="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js"></script>
-<script src="++resource++jarn.xmpp.collaboration.js/collaborate.js"></script>
-<script tal:content="view/setup"></script>
+<tal:viewlet tal:condition="view/available">
+  <script src="++resource++jarn.xmpp.collaboration.js/jquery.ba-dotimeout.min.js"></script>
+  <script src="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js"></script>
+  <script src="++resource++jarn.xmpp.collaboration.js/collaborate.js"></script>
+  <script tal:content="view/setup"></script>
+</tal:viewlet>

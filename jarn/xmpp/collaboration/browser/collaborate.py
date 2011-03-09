@@ -1,9 +1,11 @@
 import logging
 
 from plone.app.layout.viewlets.common import ViewletBase
+from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
+from zope.component import queryUtility
 
-from jarn.xmpp.core.interfaces import IXMPPSettings
+from jarn.xmpp.collaboration.interfaces import ICollaborativeEditingComponent
 
 logger = logging.getLogger('jarn.xmpp.collaborate')
 
@@ -12,9 +14,9 @@ class CollaborateViewlet(ViewletBase):
     """
     """
 
-    def update(self):
-        super(CollaborateViewlet, self).update()
-        self.settings = getUtility(IXMPPSettings)
+    @property
+    def available(self):
+        return queryUtility(ICollaborativeEditingComponent) is not None
 
     @property
     def html_ids(self):
@@ -22,7 +24,11 @@ class CollaborateViewlet(ViewletBase):
 
     @property
     def setup(self):
+        registry = getUtility(IRegistry)
+        component_jid = registry.get('jarn.xmpp.collaborationJID')
+        if component_jid is None:
+            return ""
         return """
-        jarnxmpp.ce.component = 'collaboration.localhost';
+        jarnxmpp.ce.component = '%s';
         jarnxmpp.ce.html_ids =  %s;
-        """ % (str(self.html_ids))
+        """ % (component_jid, str(self.html_ids))
