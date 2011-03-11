@@ -130,38 +130,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['node'] = node
         self.xmlstream.send(message)
 
-    def userJoined(self, node, user):
-        """
-        Called when a user has joined a CE session.
-
-        This method is to meant to be overriden by components.
-        """
-        logger.info('User %s joined node %s.' % (user, node))
-
-    def userLeft(self, node, user):
-        """
-        Called when a user has left a CE session.
-
-        This method is to meant to be overriden by components.
-        """
-        logger.info('User %s left node %s.' % (user, node))
-
-    def getNodeText(self, node):
-        """
-        Returns the text of the node before a CE session is started.
-
-        This method is to meant to be overriden by components.
-        """
-        return 'Welcome to Plone'
-
-    def setNodeText(self, node):
-        """
-        Saves the text of the node during/after a CE session.
-
-        This method is to meant to be overriden by components.
-        """
-        pass
-
     # Disco
     def getDiscoInfo(self, requestor, target, nodeIdentifier=''):
         """
@@ -182,3 +150,36 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         This handler does not support items.
         """
         return []
+
+    # Implemented by sub-classing.
+    def userJoined(self, node, user):
+        """
+        Called when a user has joined a CE session.
+
+        This method is to meant to be overriden by components.
+        """
+        pass
+
+    def userLeft(self, node, user):
+        """
+        Called when a user has left a CE session.
+
+        This method is to meant to be overriden by components.
+        """
+        pass
+
+    def getNodeText(self, node):
+        """
+        Returns the text of the node before a CE session is started.
+
+        This method is to meant to be overriden by components.
+        """
+        pass
+
+    def setNodeText(self, node):
+        """
+        Saves the text of the node during/after a CE session.
+
+        This method is to meant to be overriden by components.
+        """
+        pass
