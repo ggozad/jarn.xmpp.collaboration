@@ -8,8 +8,8 @@ jarnxmpp.ce = {
 
     _setupNode: function (node) {
         var selector = '#' + jarnxmpp.ce.nodeToId[node];
-        var text = $.trim($(selector).text());
-        $(selector).text(text);
+        var text = $.trim($(selector).html());
+        $(selector).html(text);
         jarnxmpp.ce.shadow_copies[node] = text;
         jarnxmpp.ce.last_update[node] = new Date().getTime();
         $(selector).attr('contenteditable', true).addClass('jarnxmpp-ceditable');
@@ -42,7 +42,7 @@ jarnxmpp.ce = {
                         }
                     }
                     jarnxmpp.ce.shadow_copies[node] = shadow;
-                    $(selector).text(shadow);
+                    $(selector).html(shadow);
                 });
                 $(selector).dequeue('ce');
             }
@@ -71,7 +71,7 @@ $('.jarnxmpp-ceditable').live('blur keyup paste', function() {
 $('.jarnxmpp-ceditable').live('jarnxmpp.ce.nodeChanged', function (event) {
     var node = jarnxmpp.ce.idToNode[this.id];
     var shadow =  jarnxmpp.ce.shadow_copies[node];
-    var current = $(this).text();
+    var current = $(this).html();
     var diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true);
     if (diff.length<2) return true;
     jarnxmpp.ce.dmp.diff_cleanupEfficiency(diff);
