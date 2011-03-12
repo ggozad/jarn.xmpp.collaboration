@@ -1,5 +1,6 @@
 import logging
 import transaction
+import ZODB.interfaces
 
 from Products.CMFCore.utils import getToolByName
 from plone.registry.interfaces import IRegistry
@@ -21,7 +22,10 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
     """
 
     def __init__(self, portal):
+        connection = ZODB.interfaces.IConnection(portal._p_jar)
+        self.db = connection.db()
         self.portal = portal
+        self.portal_id = portal.id
 
     def userJoined(self, node, user):
         logger.info('User %s joined node %s.' % (user, node))
@@ -42,7 +46,10 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
         return text
 
     def setNodeText(self, node, text):
-        ct = getToolByName(self.portal, 'portal_catalog')
+        conn = self.db.open()
+        portal = conn.root().data['Application'][self.portal_id]
+        transaction.begin()
+        ct = getToolByName(portal, 'portal_catalog')
         uid, html_id = node.split('#')
         item = ct.unrestrictedSearchResults(UID=uid)
         if not item:
@@ -50,6 +57,7 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
         item = ICollaborativelyEditable(item[0].getObject())
         item.setNodeTextFromHtmlID(html_id, text)
         transaction.commit()
+        conn.close()
 
 
 def setupCollaborationComponent(portal, event):
