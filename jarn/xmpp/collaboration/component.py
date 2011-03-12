@@ -41,8 +41,15 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
         transaction.abort()
         return text
 
-    def setNodeText(self, node):
-        pass
+    def setNodeText(self, node, text):
+        ct = getToolByName(self.portal, 'portal_catalog')
+        uid, html_id = node.split('#')
+        item = ct.unrestrictedSearchResults(UID=uid)
+        if not item:
+            return
+        item = ICollaborativelyEditable(item[0].getObject())
+        item.setNodeTextFromHtmlID(html_id, text)
+        transaction.commit()
 
 
 def setupCollaborationComponent(portal, event):

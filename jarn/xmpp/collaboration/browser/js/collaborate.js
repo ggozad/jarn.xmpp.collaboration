@@ -22,6 +22,10 @@ jarnxmpp.ce = {
         buttons.find('.save').click(function(){
             // XXX: TODO
             // Send save message
+            var message = $msg({to: jarnxmpp.ce.component})
+                .c('x', {xmlns: jarnxmpp.ce.NS})
+                .c('item', {node: node, action: 'save'});
+            jarnxmpp.connection.send(message);
             return false;
         });
         jarnxmpp.connection.send(presence);

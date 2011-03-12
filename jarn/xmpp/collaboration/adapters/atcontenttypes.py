@@ -66,3 +66,11 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
             text =self.context.getText()
         text = text.decode('utf-8')
         return text
+
+    def setNodeTextFromHtmlID(self, html_id, text):
+        if html_id == 'parent-fieldname-title':
+            self.context.setTitle(text)
+        elif html_id == 'parent-fieldname-description':
+            self.context.setDescription(text)
+        elif html_id == 'parent-fieldname-text':
+            self.context.setText(text)

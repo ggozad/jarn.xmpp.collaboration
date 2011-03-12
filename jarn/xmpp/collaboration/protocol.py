@@ -94,6 +94,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if action=='patch' and node in self.shadow_copies:
                 diff = elem.children[0]
                 self._handlePatch(node, sender, diff)
+            elif action=='save' and node in self.shadow_copies:
+                self.setNodeText(node, self.shadow_copies[node])
 
     def _handlePatch(self, node, sender, diff):
         patches = self.dmp.patch_fromText(diff)
@@ -175,7 +177,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         """
         pass
 
-    def setNodeText(self, node):
+    def setNodeText(self, node, text):
         """
         Saves the text of the node during/after a CE session.
 
