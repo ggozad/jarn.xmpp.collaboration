@@ -73,4 +73,4 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
         elif html_id == 'parent-fieldname-description':
             self.context.setDescription(text)
         elif html_id == 'parent-fieldname-text':
-            self.context.setText(text)
+            self.context.setText(text, mimetype='text/html')
