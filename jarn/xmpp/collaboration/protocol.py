@@ -106,8 +106,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
         else:
-            logger.info('Patches node %s to %s' % (node, new_text))
-
+            logger.info('Patch from %s applied on %s'%(sender, node))
         self.shadow_copies[node] = new_text
 
         message = Element((None, "message", ))
