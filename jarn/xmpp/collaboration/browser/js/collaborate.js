@@ -15,8 +15,16 @@ jarnxmpp.ce = {
         $(selector).attr('contenteditable', true).addClass('jarnxmpp-ceditable');
         var presence = $pres({to: jarnxmpp.ce.component})
             .c('query', {xmlns: jarnxmpp.ce.NS, 'node':node});
-        jarnxmpp.connection.send(presence);
 
+        var buttons = $("<div class='collaborationToolbar'>" +
+                        "<a href='#' class='save'></a>" +
+                        "</div>").insertBefore(selector);
+        buttons.find('.save').click(function(){
+            // XXX: TODO
+            // Send save message
+            return false;
+        });
+        jarnxmpp.connection.send(presence);
     },
 
     patchReceived: function (msg) {

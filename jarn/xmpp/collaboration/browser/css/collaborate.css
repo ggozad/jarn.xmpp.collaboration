@@ -1,0 +1,14 @@
+.collaborationToolbar {
+}
+
+.collaborationToolbar a {
+	display: block;
+	width: 16px;
+	height: 16px;
+	float: left;
+	margin: 2px;
+}
+
+.collaborationToolbar .save {
+	background: url("++resource++jarn.xmpp.collaboration.images/save.png") -16px 0;
+}

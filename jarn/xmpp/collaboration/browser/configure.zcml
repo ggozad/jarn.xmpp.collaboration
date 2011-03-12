@@ -17,4 +17,14 @@
     directory="js"
     />
 
+  <browser:resourceDirectory
+    name="jarn.xmpp.collaboration.images"
+    directory="images"
+    />
+
+  <browser:resourceDirectory
+    name="jarn.xmpp.collaboration.css"
+    directory="css"
+    />
+
 </configure>
