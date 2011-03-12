@@ -45,6 +45,8 @@ jarnxmpp.ce = {
                     $(selector).html(shadow);
                 });
                 $(selector).dequeue('ce');
+            } else if (action === 'set') {
+                $(selector).html(patch_text);
             }
         });
         return true;
