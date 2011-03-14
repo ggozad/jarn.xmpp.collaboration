@@ -63,7 +63,7 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
         elif html_id == 'parent-fieldname-description':
             text = self.context.Description()
         elif html_id == 'parent-fieldname-text':
-            text =self.context.getText()
+            text =self.context.getRawText()
         text = text.decode('utf-8')
         return text
 
