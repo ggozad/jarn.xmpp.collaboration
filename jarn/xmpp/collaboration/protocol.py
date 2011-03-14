@@ -50,7 +50,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
-                    self.userLeft(node, sender)
+                    self.userLeft(sender, node)
                     if not self.node_participants[node]:
                         del self.node_participants[node]
                         del self.shadow_copies[node]
@@ -78,10 +78,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
 
         # Send shadow copy text.
         if node not in self.shadow_copies:
-            self.shadow_copies[node] = self.getNodeText(node)
+            self.shadow_copies[node] = self.getNodeText(sender, node)
         self._sendShadowCopy(sender, node)
 
-        self.userJoined(node, sender)
+        self.userJoined(sender, node)
 
     def _onMessage(self, message):
         sender = message['from']
@@ -95,7 +95,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                 diff = elem.children[0]
                 self._handlePatch(node, sender, diff)
             elif action=='save' and node in self.shadow_copies:
-                self.setNodeText(node, self.shadow_copies[node])
+                self.setNodeText(sender, node, self.shadow_copies[node])
 
     def _handlePatch(self, node, sender, diff):
         patches = self.dmp.patch_fromText(diff)
@@ -153,7 +153,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         return []
 
     # Implemented by sub-classing.
-    def userJoined(self, node, user):
+    def userJoined(self, user, node):
         """
         Called when a user has joined a CE session.
 
@@ -161,7 +161,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         """
         pass
 
-    def userLeft(self, node, user):
+    def userLeft(self, user, node):
         """
         Called when a user has left a CE session.
 
@@ -169,7 +169,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         """
         pass
 
-    def getNodeText(self, node):
+    def getNodeText(self, user, node):
         """
         Returns the text of the node before a CE session is started.
 
@@ -177,7 +177,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         """
         pass
 
-    def setNodeText(self, node, text):
+    def setNodeText(self, user, node, text):
         """
         Saves the text of the node during/after a CE session.
 
