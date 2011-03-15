@@ -22,8 +22,10 @@ class DiffMatchPatchTest(unittest.TestCase):
         ce = ICollaborativelyEditable(doc)
         self.assertEqual(uid, ce.contentUID)
         self.assertEqual(['parent-fieldname-title',
-                          'parent-fieldname-description'],
+                          'parent-fieldname-description',
+                          'parent-fieldname-text'],
                          ce.htmlIDs)
         self.assertEqual([uid + '#' + 'parent-fieldname-title',
-                          uid + '#' + 'parent-fieldname-description'],
+                          uid + '#' + 'parent-fieldname-description',
+                          uid + '#' + 'parent-fieldname-text'],
                          ce.nodeIDs)
