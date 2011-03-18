@@ -3,13 +3,11 @@
   xmlns:browser="http://namespaces.zope.org/browser"
   i18n_domain="jarn.xmpp.collaboration">
 
-  <browser:viewlet
-    name="jarn.xmpp.collaborate.collaborativeediting"
-    for="Products.CMFCore.interfaces.IContentish"
-    manager="plone.app.layout.viewlets.interfaces.IBelowContent"
-    class=".collaborate.CollaborateViewlet"
-    template="collaborate.pt"
-    permission="zope2.View"
+  <browser:view
+    for="*"
+    name="collaborate"
+    class=".collaborate.CollaborateView"
+    permission="cmf.ModifyPortalContent"
     />
 
   <browser:resourceDirectory

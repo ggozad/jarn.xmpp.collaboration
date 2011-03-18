@@ -53,24 +53,23 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
 
     @property
     def htmlIDs(self):
-        return ['parent-fieldname-title', 'parent-fieldname-description',
-                'parent-fieldname-text']
+        return ['title', 'description']
 
     def getNodeTextFromHtmlID(self, html_id):
         text = ''
-        if html_id == 'parent-fieldname-title':
+        if html_id == 'title':
             text = self.context.Title()
-        elif html_id == 'parent-fieldname-description':
+        elif html_id == 'description':
             text = self.context.Description()
-        elif html_id == 'parent-fieldname-text':
+        elif html_id == 'text':
             text =self.context.getRawText()
         text = text.decode('utf-8')
         return text
 
     def setNodeTextFromHtmlID(self, html_id, text):
-        if html_id == 'parent-fieldname-title':
+        if html_id == 'title':
             self.context.setTitle(text)
-        elif html_id == 'parent-fieldname-description':
+        elif html_id == 'description':
             self.context.setDescription(text)
-        elif html_id == 'parent-fieldname-text':
+        elif html_id == 'text':
             self.context.setText(text, mimetype='text/html')
