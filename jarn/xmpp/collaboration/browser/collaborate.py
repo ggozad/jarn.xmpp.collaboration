@@ -28,14 +28,6 @@ class CollaborateView(BrowserView):
         return self.ceditable is not None and \
             queryUtility(ICollaborativeEditingComponent)
 
-    @property
-    def nodeToId(self):
-        return self.ceditable.nodeToId
-
-    @property
-    def idToNode(self):
-        return self.ceditable.idToNode
-
     def __call__(self):
         if not self.available:
             return
@@ -45,5 +37,6 @@ class CollaborateView(BrowserView):
             return
         return json.dumps({
             'component': component_jid,
-            'nodeToId': self.nodeToId,
-            'idToNode': self.idToNode})
+            'nodeToId': self.ceditable.nodeToId,
+            'idToNode': self.ceditable.idToNode,
+            'tiny_ids': self.ceditable.tinyIDs})

@@ -53,7 +53,11 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
 
     @property
     def htmlIDs(self):
-        return ['title', 'description']
+        return ['title', 'description', 'text']
+
+    @property
+    def tinyIDs(self):
+        return ['text']
 
     def getNodeTextFromHtmlID(self, html_id):
         text = ''

@@ -4,6 +4,7 @@ jarnxmpp.ce = {
     dmp : new diff_match_patch(),
     shadow_copies: {},
     last_update: {},
+    tiny_ids: {},
 
     _setup: function() {
         var context_url = $('base').attr('href');
@@ -14,7 +15,9 @@ jarnxmpp.ce = {
             jarnxmpp.ce.component = data.component;
             jarnxmpp.ce.nodeToId = data.nodeToId;
             jarnxmpp.ce.idToNode = data.idToNode;
-
+            $.each(data.tiny_ids, function (index, value) {
+                    jarnxmpp.ce.tiny_ids[value] = '';
+            });
             jarnxmpp.ce.dmp.Match_Threshold=0.5;
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
             jarnxmpp.connection.addHandler(jarnxmpp.ce.patchReceived, null, 'message', null, null, jarnxmpp.ce.component);
@@ -24,25 +27,74 @@ jarnxmpp.ce = {
                 if (jarnxmpp.ce.nodeToId.hasOwnProperty(key))
                     jarnxmpp.ce._setupNode(key);
 
-            $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.nodeChanged);
+            $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
 
         });
     },
 
     _setupNode: function (node) {
-        var selector = '#' + jarnxmpp.ce.nodeToId[node];
-        var text = $(selector).val();
-        $(selector).html(text);
+        var node_id = jarnxmpp.ce.nodeToId[node];
+        var text = jarnxmpp.ce._getContent(node_id);
         jarnxmpp.ce.shadow_copies[node] = text;
         jarnxmpp.ce.last_update[node] = new Date().getTime();
         var presence = $pres({to: jarnxmpp.ce.component})
             .c('query', {xmlns: jarnxmpp.ce.NS, 'node':node});
         jarnxmpp.connection.send(presence);
-        $(selector).addClass('jarnxmpp-ceditable');
-
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            editor.onEvent.add(function (ed, l) {
+                jarnxmpp.ce.nodeChanged(editor.id);
+            });
+        }  else {
+            $('#' + node_id).bind('blur keyup paste', function () {
+                jarnxmpp.ce.nodeChanged(this.id);
+            });
+        }
     },
 
-    nodeChanged: function (event) {
+    _getContent: function (node_id) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            if (editor!==undefined)
+                return editor.getContent();
+        } else {
+            return $('#' + node_id).val();
+        }
+    },
+
+    _setContent: function (node_id, content) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            editor.setContent(content);
+        } else {
+            $('#' + node_id).val(content);
+        }
+    },
+
+    nodeChanged: function (node_id) {
+        var now = new Date().getTime();
+        var node = jarnxmpp.ce.idToNode[node_id];
+        if ((now-jarnxmpp.ce.last_update[node]) < 500.0) {
+            $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 500, function() {
+                now = new Date().getTime();
+                jarnxmpp.ce.last_update[node] = now;
+                var event = $.Event('jarnxmpp.ce.nodeChanged');
+                event.node = node;
+                event.text = jarnxmpp.ce._getContent(node_id);
+                $(document).trigger(event);
+            });
+            return true;
+        }
+        $.doTimeout('jarnxmpp.ce.delayedNodeChanged');
+        jarnxmpp.ce.last_update[node] = now;
+        var event = $.Event('jarnxmpp.ce.nodeChanged');
+        event.node = node;
+        event.text = jarnxmpp.ce._getContent(node_id);
+        $(document).trigger(event);
+        return false;
+    },
+
+    sendPatch: function (event) {
         var node = event.node;
         var shadow =  jarnxmpp.ce.shadow_copies[node];
         var current = event.text;
@@ -67,7 +119,8 @@ jarnxmpp.ce = {
         $(msg).find('item').each(function () {
             var node = $(this).attr('node');
             var action = $(this).attr('action');
-            var selector = '#' + jarnxmpp.ce.nodeToId[node];
+            var node_id = jarnxmpp.ce.nodeToId[node];
+            var selector = '#' + node_id;
             var patch_text = $(this).text();
 
             if (action === 'patch') {
@@ -87,40 +140,17 @@ jarnxmpp.ce = {
                         }
                     }
                     jarnxmpp.ce.shadow_copies[node] = shadow;
-                    $(selector).val(shadow);
+                    jarnxmpp.ce._setContent(node_id, shadow);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
-                $(selector).val(patch_text);
+                jarnxmpp.ce._setContent(node_id, patch_text);
                 jarnxmpp.ce.shadow_copies[node] = patch_text;
             }
         });
         return true;
     },
 };
-
-$('.jarnxmpp-ceditable').live('blur keyup paste', function() {
-    var now = new Date().getTime();
-    var node = jarnxmpp.ce.idToNode[this.id];
-    if ((now-jarnxmpp.ce.last_update[node]) < 500.0) {
-        $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 500, function() {
-            now = new Date().getTime();
-            jarnxmpp.ce.last_update[node] = now;
-            var event = $.Event('jarnxmpp.ce.nodeChanged');
-            event.node = node;
-            event.text = $(this).val();
-            $(document).trigger(event);
-        });
-        return true;
-    }
-    $.doTimeout('jarnxmpp.ce.delayedNodeChanged');
-    jarnxmpp.ce.last_update[node] = now;
-    var event = $.Event('jarnxmpp.ce.nodeChanged');
-    event.node = node;
-    event.text = $(this).val();
-    $(document).trigger(event);
-    return false;
-});
 
 $(document).bind('jarnxmpp.connected', function () {
     if ($('form[name="edit_form"]').length) {
