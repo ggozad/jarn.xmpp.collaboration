@@ -45,7 +45,7 @@ jarnxmpp.ce = {
     nodeChanged: function (event) {
         var node = event.node;
         var shadow =  jarnxmpp.ce.shadow_copies[node];
-        var current = $('#' + jarnxmpp.ce.nodeToId[node]).val();
+        var current = event.text;
         var diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true);
         if (diff.length<2)
             return false;
@@ -108,12 +108,17 @@ $('.jarnxmpp-ceditable').live('blur keyup paste', function() {
             jarnxmpp.ce.last_update[node] = now;
             var event = $.Event('jarnxmpp.ce.nodeChanged');
             event.node = node;
+            event.text = $(this).val();
             $(document).trigger(event);
         });
         return true;
     }
     $.doTimeout('jarnxmpp.ce.delayedNodeChanged');
     jarnxmpp.ce.last_update[node] = now;
+    var event = $.Event('jarnxmpp.ce.nodeChanged');
+    event.node = node;
+    event.text = $(this).val();
+    $(document).trigger(event);
     return false;
 });
 
