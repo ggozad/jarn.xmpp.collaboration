@@ -17,7 +17,7 @@ from wokkel import disco, iwokkel
 from wokkel.generic import parseXml
 from wokkel.test.helpers import XmlStreamStub
 
-from jarn.xmpp.collaboration import protocol
+from jarn.xmpp.collaboration.tests import mock
 
 
 class DifferentialSyncronisationHandlerTest(unittest.TestCase):
@@ -27,9 +27,41 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
 
     def setUp(self):
         self.stub = XmlStreamStub()
-        self.protocol = protocol.DifferentialSyncronisationHandler()
+        self.protocol = mock.MockDifferentialSyncronisationHandler()
         self.protocol.xmlstream = self.stub.xmlstream
         self.protocol.connectionInitialized()
+
+    def test_onPresence(self):
+        """
+        Upon receiving a presence, the protocol MUST set itself up,
+        as well as send the initial text to the user.
+        """
+        self.protocol.mock_text['test-node'] = 'foo'
+        xml = """<presence from='test@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+        self.assertEqual({u'test-node': set([u'test@example.com'])},
+                         self.protocol.node_participants)
+        self.assertEqual({u'test@example.com': set([u'test-node'])},
+                          self.protocol.participant_nodes)
+        self.assertEqual({u'test-node': 'foo'},
+                         self.protocol.shadow_copies)
+
+        message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='test@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='set' node='test-node'>foo</item>" +
+            "</x></message>", message.toXml())
+
+        xml = """<presence from='test@example.com' to='example.com'
+                    type='unavailable'/>"""
+        self.stub.send(parseXml(xml))
+        self.assertEqual({}, self.protocol.node_participants)
+        self.assertEqual({}, self.protocol.participant_nodes)
+        self.assertEqual({}, self.protocol.shadow_copies)
 
     def test_interfaceIDisco(self):
         """
