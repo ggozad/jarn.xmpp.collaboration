@@ -9,15 +9,14 @@ from zope.interface import verify
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from twisted.words.protocols.jabber.error import StanzaError
 from twisted.words.protocols.jabber.jid import JID
-from twisted.words.protocols.jabber.xmlstream import toResponse
 
 from wokkel import disco, iwokkel
 from wokkel.generic import parseXml
 from wokkel.test.helpers import XmlStreamStub
 
 from jarn.xmpp.collaboration.tests import mock
+from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 
 class DifferentialSyncronisationHandlerTest(unittest.TestCase):
@@ -34,7 +33,8 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
     def test_onPresence(self):
         """
         Upon receiving a presence, the protocol MUST set itself up,
-        as well as send the initial text to the user.
+        as well as send the initial text to the user. When the user leaves
+        there's more bookkeeping.
         """
         self.protocol.mock_text['test-node'] = 'foo'
         xml = """<presence from='test@example.com' to='example.com'>
@@ -62,6 +62,40 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual({}, self.protocol.node_participants)
         self.assertEqual({}, self.protocol.participant_nodes)
         self.assertEqual({}, self.protocol.shadow_copies)
+
+    def test_onPatch(self):
+        # 'foo' is the initial text. foo and bar present.
+        self.protocol.mock_text['test-node'] = 'foo'
+        xml = """<presence from='foo@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+        xml = """<presence from='bar@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+
+        # bar sends a patch changing the text to 'foobar'.
+        xml = """<message from='bar@example.com' to='example.com'>
+                    <x xmlns='http://jarn.com/ns/collaborative-editing'>
+                        <item node='test-node' action='patch'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>
+                    </x>
+                </message>"""
+        self.stub.send(parseXml(xml))
+
+        # foo receives the same patch.
+        message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='foo@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='patch' node='test-node'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>" +
+            "</x></message>",
+            message.toXml())
+
+        # The shadow copy is 'foobar'
+        self.assertEqual(u'foobar', self.protocol.shadow_copies['test-node'])
 
     def test_interfaceIDisco(self):
         """

@@ -29,10 +29,12 @@ class DifferentialSyncronisationHandler(XMPPHandler):
 
     implements(IDifferentialSyncronisation, iwokkel.IDisco)
 
-    node_participants = {}
-    participant_nodes = {}
-    shadow_copies = {}
-    dmp = diff_match_patch()
+    def __init__(self):
+        self.node_participants = {}
+        self.participant_nodes = {}
+        self.shadow_copies = {}
+        self.dmp = diff_match_patch()
+        super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)

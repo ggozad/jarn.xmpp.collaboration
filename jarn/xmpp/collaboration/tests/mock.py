@@ -9,7 +9,7 @@ class MockDifferentialSyncronisationHandler(DifferentialSyncronisationHandler):
     """
 
     def __init__(self):
-        super(DifferentialSyncronisationHandler, self).__init__()
+        super(MockDifferentialSyncronisationHandler, self).__init__()
         self.mock_text = {'test-node': ''}
         self.mock_users = {}
 
