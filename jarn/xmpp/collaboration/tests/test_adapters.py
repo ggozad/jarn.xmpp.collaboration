@@ -7,11 +7,11 @@ from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
 from jarn.xmpp.collaboration.testing import COLLABORATION_INTEGRATION_TESTING
 
 
-class DiffMatchPatchTest(unittest.TestCase):
+class CEAdapterTest(unittest.TestCase):
 
     layer = COLLABORATION_INTEGRATION_TESTING
 
-    def test_atcontenttypes(self):
+    def test_atdocument(self):
         portal = self.layer['portal']
         setRoles(portal, TEST_USER_ID, ['Contributor'])
         portal.invokeFactory('Document', 'adoc',
@@ -21,11 +21,34 @@ class DiffMatchPatchTest(unittest.TestCase):
         uid = doc.UID()
         ce = ICollaborativelyEditable(doc)
         self.assertEqual(uid, ce.contentUID)
-        self.assertEqual(['parent-fieldname-title',
-                          'parent-fieldname-description',
-                          'parent-fieldname-text'],
+        self.assertEqual(['title',
+                          'description',
+                          'text'],
                          ce.htmlIDs)
-        self.assertEqual([uid + '#' + 'parent-fieldname-title',
-                          uid + '#' + 'parent-fieldname-description',
-                          uid + '#' + 'parent-fieldname-text'],
+        self.assertEqual([uid + '#' + 'title',
+                          uid + '#' + 'description',
+                          uid + '#' + 'text'],
                          ce.nodeIDs)
+        self.assertEqual(['text'], ce.tinyIDs)
+
+    def test_atnewsitem(self):
+        portal = self.layer['portal']
+        setRoles(portal, TEST_USER_ID, ['Contributor'])
+        portal.invokeFactory('News Item', 'news',
+            title='A title',
+            description='Some description')
+        doc = portal['news']
+        uid = doc.UID()
+        ce = ICollaborativelyEditable(doc)
+        self.assertEqual(uid, ce.contentUID)
+        self.assertEqual(['title',
+                          'description',
+                          'text',
+                          'imageCaption'],
+                         ce.htmlIDs)
+        self.assertEqual([uid + '#' + 'title',
+                          uid + '#' + 'description',
+                          uid + '#' + 'text',
+                          uid + '#' + 'imageCaption'],
+                         ce.nodeIDs)
+        self.assertEqual(['text'], ce.tinyIDs)

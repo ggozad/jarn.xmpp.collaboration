@@ -1,4 +1,6 @@
 from Products.ATContentTypes.interfaces.document import IATDocument
+from Products.ATContentTypes.interfaces.news import IATNewsItem
+
 from zope.component import adapts
 from zope.interface import implements
 
@@ -77,3 +79,40 @@ class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
             self.context.setDescription(text)
         elif html_id == 'text':
             self.context.setText(text, mimetype='text/html')
+
+
+class ATNewsItemCEAdapter(ATContentTypeCEAdapterBase):
+
+    implements(ICollaborativelyEditable)
+    adapts(IATNewsItem)
+
+    @property
+    def htmlIDs(self):
+        return ['title', 'description', 'text', 'imageCaption']
+
+    @property
+    def tinyIDs(self):
+        return ['text']
+
+    def getNodeTextFromHtmlID(self, html_id):
+        text = ''
+        if html_id == 'title':
+            text = self.context.Title()
+        elif html_id == 'description':
+            text = self.context.Description()
+        elif html_id == 'text':
+            text =self.context.getRawText()
+        elif html_id == 'imageCaption':
+            text =self.context.getImageCaption()
+        text = text.decode('utf-8')
+        return text
+
+    def setNodeTextFromHtmlID(self, html_id, text):
+        if html_id == 'title':
+            self.context.setTitle(text)
+        elif html_id == 'description':
+            self.context.setDescription(text)
+        elif html_id == 'text':
+            self.context.setText(text, mimetype='text/html')
+        elif html_id == 'imageCaption':
+            text =self.context.setImageCaption(text)
