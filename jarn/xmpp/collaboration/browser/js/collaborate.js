@@ -133,12 +133,11 @@ jarnxmpp.ce = {
                     var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
                     shadow = patch_applications[0];
                     var results = patch_applications[1];
-                    for (var i in results) {
+                    $.each(results, function (index, value) {
                         // XXX: Do something about it!
-                        if (results[i]!==true) {
-                            console.log('Failure at applying patch:'+i+'of '+results.length);
-                        }
-                    }
+                        if (value!==true)
+                            console.log('Failure at applying patch:' + index + 'of '+results.length);
+                    });
                     jarnxmpp.ce.shadow_copies[node] = shadow;
                     jarnxmpp.ce._setContent(node_id, shadow);
                 });
