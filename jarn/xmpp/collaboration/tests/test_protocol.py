@@ -1,10 +1,3 @@
-# Copyright (c) 2003-2009 Ralph Meijer
-# See LICENSE for details.
-
-"""
-Tests for L{wokkel.ping}.
-"""
-
 from zope.interface import verify
 
 from twisted.internet import defer
@@ -16,7 +9,6 @@ from wokkel.generic import parseXml
 from wokkel.test.helpers import XmlStreamStub
 
 from jarn.xmpp.collaboration.tests import mock
-from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 
 class DifferentialSyncronisationHandlerTest(unittest.TestCase):
