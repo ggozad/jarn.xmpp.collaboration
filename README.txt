@@ -86,6 +86,14 @@ The session is terminated when the party sends an `unavailable` presence::
 
     <presence from='foo@example.com/work' type='unavailable' />
 
-TODO
-----
+Protocol TODO
+-------------
 Define and describe errors and handling.
+
+Credits
+=======
+
+``jarn.xmpp.collaboration`` relies on the wonderful `Diff-Match-Patch`_ from Neil Fraser at Google. It is distributed under the Apache License 2.0.
+
+
+.. _Diff-Match-Patch: http://code.google.com/p/google-diff-match-patch

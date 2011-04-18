@@ -27,6 +27,7 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
     """
 
     def __init__(self, portal):
+        super(CollaborationHandler, self).__init__()
         self.portal_id = portal.id
 
     def userJoined(self, user, node):
