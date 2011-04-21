@@ -75,7 +75,24 @@ jarnxmpp.ce = {
         }
     },
 
+    _getSelection: function(node_id) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            return editor.selection.getBookmark();
+        } else
+            return $('#' + node_id).getSelection();
+    },
+
+    _setSelection: function(node_id, selection) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            return editor.selection.moveToBookmark(selection);
+        } else
+            return $('#' + node_id).setSelection(selection.start, selection.end);
+    },
+
     nodeChanged: function (node_id) {
+        console.log(jarnxmpp.ce._getSelection(node_id).start);
         var now = new Date().getTime();
         var node = jarnxmpp.ce.idToNode[node_id];
         if ((now-jarnxmpp.ce.last_update[node]) < 500.0) {
@@ -143,7 +160,9 @@ jarnxmpp.ce = {
                             console.log('Failure at applying patch:' + index + 'of '+results.length);
                     });
                     jarnxmpp.ce.shadow_copies[node] = shadow;
+                    var selection = jarnxmpp.ce._getSelection(node_id);
                     jarnxmpp.ce._setContent(node_id, shadow);
+                    jarnxmpp.ce._setSelection(node_id, selection);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
