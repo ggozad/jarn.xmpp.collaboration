@@ -42,9 +42,13 @@ jarnxmpp.ce = {
         jarnxmpp.connection.send(presence);
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
-            editor.onEvent.add(function (ed, l) {
+            editor.onKeyUp.add(function (ed, l) {
                 jarnxmpp.ce.nodeChanged(editor.id);
             });
+            editor.onChange.add(function (ed, l) {
+                jarnxmpp.ce.nodeChanged(editor.id);
+            });
+
         }  else {
             $('#' + node_id).bind('blur keyup paste', function () {
                 jarnxmpp.ce.nodeChanged(this.id);
