@@ -5,7 +5,7 @@
     <field type="plone.registry.field.ASCIILine">
       <title>PubSub JID</title>
     </field>
-    <value>collaboration.localhost</value>
+    <value>collaboration.myserver</value>
   </record>
 
 </registry>
