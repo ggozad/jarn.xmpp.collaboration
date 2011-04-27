@@ -119,6 +119,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item = x.addElement('item', content=diff)
         item['action'] = 'patch'
         item['node'] = node
+        item['user'] = sender
 
         for jid in (self.node_participants[node] - set([sender])):
             message['to'] = jid

@@ -173,6 +173,7 @@ jarnxmpp.ce = {
                 // XXX: This should be queued differently including the above...
                 //
                 $(selector).queue('ce', function() {
+                    var user_jid = $(this).attr('user');
                     var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                     var shadow = jarnxmpp.ce.shadow_copies[node];
                     var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
