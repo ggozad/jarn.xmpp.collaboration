@@ -49,8 +49,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         sender = presence['from']
         type = presence.getAttribute('type')
         if type=='unavailable':
-            if sender in self.participant_focus:
-                del self.participant_focus[sender]
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
@@ -59,6 +57,16 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                         del self.node_participants[node]
                         del self.shadow_copies[node]
                 del self.participant_nodes[sender]
+            if sender in self.participant_focus:
+                # Notify those that participate in the focused node that
+                # the user left. In principle, it is possible that there are
+                # other common nodes whose participants should also be
+                # informed but hey!
+                focus_node = self.participant_focus[sender]
+                if focus_node in self.node_participants:
+                    participants = self.node_participants[focus_node]
+                    self._sendFocus('', sender, participants)
+                del self.participant_focus[sender]
 
             return
 
@@ -84,9 +92,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         if node not in self.shadow_copies:
             self.shadow_copies[node] = self.getNodeText(sender, node)
         self._sendShadowCopy(sender, node)
+
         # Send participants focus
         for participant in (self.node_participants[node] - set([sender])):
-            if self.participant_focus[participant] == node:
+            if participant in self.participant_focus and self.participant_focus[participant] == node:
                 self._sendFocus(node, participant, [sender])
         self.userJoined(sender, node)
 

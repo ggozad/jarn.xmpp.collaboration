@@ -103,9 +103,10 @@ jarnxmpp.ce = {
     _updateFocus: function(node_id, jid) {
         var participant_id = 'node-participant-' + Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
         $('#' + participant_id).remove();
-        var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
-        $('#' + node_id + '-participants').append(participant_element);
-        console.log(node_id + ' ' + jid);
+        if (node_id !=='') {
+            var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
+            $('#' + node_id + '-participants').append(participant_element);
+        }
     },
 
     nodeChanged: function (node_id) {
@@ -134,7 +135,7 @@ jarnxmpp.ce = {
     nodeFocused: function (node) {
         var message = $msg({to: jarnxmpp.ce.component})
             .c('x', {xmlns: jarnxmpp.ce.NS})
-            .c('item', {node: node, action: 'focus'});
+            .c('item', {node: node, action: 'focus', user: jarnxmpp.connection.jid});
         jarnxmpp.connection.send(message);
         jarnxmpp.ce._updateFocus(jarnxmpp.ce.nodeToId[node], jarnxmpp.connection.jid);
     },
