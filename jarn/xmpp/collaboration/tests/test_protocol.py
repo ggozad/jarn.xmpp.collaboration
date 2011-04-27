@@ -82,7 +82,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual(
             "<message to='foo@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='patch' node='test-node'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>" +
+            "<item action='patch' node='test-node' user='bar@example.com'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>" +
             "</x></message>",
             message.toXml())
 
