@@ -20,7 +20,7 @@ jarnxmpp.ce = {
             });
             jarnxmpp.ce.dmp.Match_Threshold=0.5;
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
-            jarnxmpp.connection.addHandler(jarnxmpp.ce.patchReceived, null, 'message', null, null, jarnxmpp.ce.component);
+            jarnxmpp.connection.addHandler(jarnxmpp.ce.messageReceived, null, 'message', null, null, jarnxmpp.ce.component);
 
             // Setup up nodes.
             for (var key in jarnxmpp.ce.nodeToId)
@@ -28,7 +28,10 @@ jarnxmpp.ce = {
                     jarnxmpp.ce._setupNode(key);
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
-
+            //jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[$('*:focus').attr('id')]);
+            $('*:focus').each(function () {
+                jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
+            });
         });
     },
 
@@ -48,12 +51,18 @@ jarnxmpp.ce = {
             editor.onChange.add(function (ed, l) {
                 jarnxmpp.ce.nodeChanged(editor.id);
             });
-
+            editor.onActivate.add(function (ed) {
+                jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[editor.id]);
+            });
         }  else {
             $('#' + node_id).bind('blur keyup paste', function () {
                 jarnxmpp.ce.nodeChanged(this.id);
             });
+            $('#' + node_id).bind('focus', function() {
+                jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
+            });
         }
+        $('#' + node_id).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants'));
     },
 
     _getContent: function (node_id) {
@@ -72,6 +81,31 @@ jarnxmpp.ce = {
             editor.setContent(content);
         } else {
             $('#' + node_id).val(content);
+        }
+    },
+
+    _getSelection: function(node_id) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            return editor.selection.getBookmark();
+        } else
+            return $('#' + node_id).getSelection();
+    },
+
+    _setSelection: function(node_id, selection) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            var editor = window.tinyMCE.getInstanceById(node_id);
+            return editor.selection.moveToBookmark(selection);
+        } else
+            return $('#' + node_id).setSelection(selection.start, selection.end);
+    },
+
+    _updateFocus: function(node_id, jid) {
+        var participant_id = 'node-participant-' + Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
+        $('#' + participant_id).remove();
+        if (node_id !=='') {
+            var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
+            $('#' + node_id + '-participants').append(participant_element);
         }
     },
 
@@ -98,6 +132,14 @@ jarnxmpp.ce = {
         return false;
     },
 
+    nodeFocused: function (node) {
+        var message = $msg({to: jarnxmpp.ce.component})
+            .c('x', {xmlns: jarnxmpp.ce.NS})
+            .c('item', {node: node, action: 'focus', user: jarnxmpp.connection.jid});
+        jarnxmpp.connection.send(message);
+        jarnxmpp.ce._updateFocus(jarnxmpp.ce.nodeToId[node], jarnxmpp.connection.jid);
+    },
+
     sendPatch: function (event) {
         var node = event.node;
         var shadow =  jarnxmpp.ce.shadow_copies[node];
@@ -119,7 +161,7 @@ jarnxmpp.ce = {
         return false;
     },
 
-    patchReceived: function (msg) {
+    messageReceived: function (msg) {
         $(msg).find('item').each(function () {
             var node = $(this).attr('node');
             var action = $(this).attr('action');
@@ -132,6 +174,7 @@ jarnxmpp.ce = {
                 // XXX: This should be queued differently including the above...
                 //
                 $(selector).queue('ce', function() {
+                    var user_jid = $(this).attr('user');
                     var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                     var shadow = jarnxmpp.ce.shadow_copies[node];
                     var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
@@ -142,13 +185,20 @@ jarnxmpp.ce = {
                         if (value!==true)
                             console.log('Failure at applying patch:' + index + 'of '+results.length);
                     });
+                    // Set shadow
                     jarnxmpp.ce.shadow_copies[node] = shadow;
+                    // Before setting the content predict where the cursor should be
+                    //var selection = jarnxmpp.ce._getSelection(node_id);
                     jarnxmpp.ce._setContent(node_id, shadow);
+                    //jarnxmpp.ce._setSelection(node_id, selection);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
                 jarnxmpp.ce._setContent(node_id, patch_text);
                 jarnxmpp.ce.shadow_copies[node] = patch_text;
+            } else if (action === 'focus') {
+                var user_jid = $(this).attr('user');
+                jarnxmpp.ce._updateFocus(node_id, user_jid);
             }
         });
         return true;

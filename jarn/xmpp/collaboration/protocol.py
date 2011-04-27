@@ -32,6 +32,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
     def __init__(self):
         self.node_participants = {}
         self.participant_nodes = {}
+        self.participant_focus = {}
         self.shadow_copies = {}
         self.dmp = diff_match_patch()
         super(DifferentialSyncronisationHandler, self).__init__()
@@ -47,7 +48,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
     def _onPresence(self, presence):
         sender = presence['from']
         type = presence.getAttribute('type')
-
         if type=='unavailable':
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
@@ -57,6 +57,16 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                         del self.node_participants[node]
                         del self.shadow_copies[node]
                 del self.participant_nodes[sender]
+            if sender in self.participant_focus:
+                # Notify those that participate in the focused node that
+                # the user left. In principle, it is possible that there are
+                # other common nodes whose participants should also be
+                # informed but hey!
+                focus_node = self.participant_focus[sender]
+                if focus_node in self.node_participants:
+                    participants = self.node_participants[focus_node]
+                    self._sendFocus('', sender, participants)
+                del self.participant_focus[sender]
 
             return
 
@@ -83,6 +93,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             self.shadow_copies[node] = self.getNodeText(sender, node)
         self._sendShadowCopy(sender, node)
 
+        # Send participants focus
+        for participant in (self.node_participants[node] - set([sender])):
+            if participant in self.participant_focus and self.participant_focus[participant] == node:
+                self._sendFocus(node, participant, [sender])
         self.userJoined(sender, node)
 
     def _onMessage(self, message):
@@ -96,6 +110,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if action=='patch' and node in self.shadow_copies:
                 diff = elem.children[0]
                 self._handlePatch(node, sender, diff)
+            elif action=='focus' and node in self.shadow_copies:
+                self.participant_focus[sender] = node
+                recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
+                self._sendFocus(node, sender, recipients)
             elif action=='save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
@@ -118,6 +136,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item = x.addElement('item', content=diff)
         item['action'] = 'patch'
         item['node'] = node
+        item['user'] = sender
 
         for jid in (self.node_participants[node] - set([sender])):
             message['to'] = jid
@@ -132,6 +151,19 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['action'] = 'set'
         item['node'] = node
         self.xmlstream.send(message)
+
+    def _sendFocus(self, node, sender, recipients):
+        message = Element((None, "message", ))
+        x = message.addElement((NS_CE, 'x'))
+        item = x.addElement('item')
+        item['action'] = 'focus'
+        item['node'] = node
+        item['user'] = sender
+
+
+        for jid in recipients:
+            message['to'] = jid
+            self.xmlstream.send(message)
 
     # Disco
     def getDiscoInfo(self, requestor, target, nodeIdentifier=''):
