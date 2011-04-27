@@ -28,7 +28,10 @@ jarnxmpp.ce = {
                     jarnxmpp.ce._setupNode(key);
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
-
+            //jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[$('*:focus').attr('id')]);
+            $('*:focus').each(function () {
+                jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
+            });
         });
     },
 
@@ -59,6 +62,7 @@ jarnxmpp.ce = {
                 jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
             });
         }
+        $('#' + node_id).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants'));
     },
 
     _getContent: function (node_id) {
@@ -97,6 +101,10 @@ jarnxmpp.ce = {
     },
 
     _updateFocus: function(node_id, jid) {
+        var participant_id = 'node-participant-' + Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
+        $('#' + participant_id).remove();
+        var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
+        $('#' + node_id + '-participants').append(participant_element);
         console.log(node_id + ' ' + jid);
     },
 
