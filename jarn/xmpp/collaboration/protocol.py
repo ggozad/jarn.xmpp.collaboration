@@ -32,6 +32,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
     def __init__(self):
         self.node_participants = {}
         self.participant_nodes = {}
+        self.participant_focus = {}
         self.shadow_copies = {}
         self.dmp = diff_match_patch()
         super(DifferentialSyncronisationHandler, self).__init__()
@@ -48,6 +49,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         sender = presence['from']
         type = presence.getAttribute('type')
         if type=='unavailable':
+            if sender in self.participant_focus:
+                del self.participant_focus[sender]
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
@@ -81,7 +84,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         if node not in self.shadow_copies:
             self.shadow_copies[node] = self.getNodeText(sender, node)
         self._sendShadowCopy(sender, node)
-
+        # Send participants focus
+        for participant in (self.node_participants[node] - set([sender])):
+            if self.participant_focus[participant] == node:
+                self._sendFocus(node, participant, [sender])
         self.userJoined(sender, node)
 
     def _onMessage(self, message):
@@ -96,7 +102,9 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                 diff = elem.children[0]
                 self._handlePatch(node, sender, diff)
             elif action=='focus' and node in self.shadow_copies:
-                self._sendFocus(node, sender)
+                self.participant_focus[sender] = node
+                recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
+                self._sendFocus(node, sender, recipients)
             elif action=='save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
@@ -135,7 +143,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['node'] = node
         self.xmlstream.send(message)
 
-    def _sendFocus(self, node, sender):
+    def _sendFocus(self, node, sender, recipients):
         message = Element((None, "message", ))
         x = message.addElement((NS_CE, 'x'))
         item = x.addElement('item')
@@ -143,7 +151,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['node'] = node
         item['user'] = sender
 
-        for jid in (self.node_participants[node] - set([sender])):
+
+        for jid in recipients:
             message['to'] = jid
             self.xmlstream.send(message)
 
