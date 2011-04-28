@@ -5,6 +5,7 @@ jarnxmpp.ce = {
     shadow_copies: {},
     last_update: {},
     tiny_ids: {},
+    focused_node: null,
 
     _setup: function() {
         var context_url = $('base').attr('href');
@@ -28,7 +29,6 @@ jarnxmpp.ce = {
                     jarnxmpp.ce._setupNode(key);
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
-            //jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[$('*:focus').attr('id')]);
             $('*:focus').each(function () {
                 jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
             });
@@ -84,10 +84,22 @@ jarnxmpp.ce = {
         }
     },
 
+    _insertCursorElement: function(node_id, shadow, selection) {
+        if (node_id in jarnxmpp.ce.tiny_ids) {
+            return;
+            //var editor = window.tinyMCE.getInstanceById(node_id);
+            //return editor.selection.getBookmark(false);
+        } else {
+            return shadow.substr(0,selection.start) +
+                   "<cursor/>" +
+                   shadow.substr(selection.start);
+        }
+    },
+
     _getSelection: function(node_id) {
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
-            return editor.selection.getBookmark();
+            return editor.selection.getBookmark(0, true);
         } else
             return $('#' + node_id).getSelection();
     },
@@ -133,6 +145,8 @@ jarnxmpp.ce = {
     },
 
     nodeFocused: function (node) {
+        jarnxmpp.ce.focused_node = node;
+        console.log(jarnxmpp.ce.focused_node);
         var message = $msg({to: jarnxmpp.ce.component})
             .c('x', {xmlns: jarnxmpp.ce.NS})
             .c('item', {node: node, action: 'focus', user: jarnxmpp.connection.jid});
@@ -177,6 +191,13 @@ jarnxmpp.ce = {
                     var user_jid = $(this).attr('user');
                     var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                     var shadow = jarnxmpp.ce.shadow_copies[node];
+                    var isFocused = false;
+                    //var selection = null;
+                    //if (jarnxmpp.ce.focused_node === node) isFocused = true;
+                    //if (isFocused) {
+                    //    selection = jarnxmpp.ce._getSelection(node_id);
+                    //    jarnxmpp.ce._insertCursorElement(node, shadow, selection);
+                    //}
                     var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
                     shadow = patch_applications[0];
                     var results = patch_applications[1];
@@ -187,10 +208,11 @@ jarnxmpp.ce = {
                     });
                     // Set shadow
                     jarnxmpp.ce.shadow_copies[node] = shadow;
-                    // Before setting the content predict where the cursor should be
-                    //var selection = jarnxmpp.ce._getSelection(node_id);
-                    jarnxmpp.ce._setContent(node_id, shadow);
-                    //jarnxmpp.ce._setSelection(node_id, selection);
+                    if (jarnxmpp.ce.focused_node === node) {
+                        var selection = jarnxmpp.ce._getSelection(node_id);
+                        jarnxmpp.ce._setContent(node_id, shadow);
+                        jarnxmpp.ce._setSelection(node_id, selection);
+                    } else jarnxmpp.ce._setContent(node_id, shadow);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
