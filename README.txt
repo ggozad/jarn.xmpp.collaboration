@@ -5,6 +5,12 @@ Introduction
 
 * a generic overridable implementation of the server component.
 * a Plone-specific implementation (server component and javascript client).
+* adapters for basic Plone content types (Pages and News Items).
+
+It is part of a suite of packages aiming to provide XMPP services to Plone. The other two packages are
+
+* `jarn.xmpp.twisted`_, provides XMPP-specific protocol implementation for twisted.
+* `jarn.xmpp.core`_ provides facilities for presence, messaging, chatting and microblogging.
 
 Requirements
 ============
@@ -27,8 +33,14 @@ The instance that is going to be running the xmpp component should include the `
           <include package="jarn.xmpp.collaboration" file="component.zcml" />
       </configure>
 
+Usage
+=====
 
-Protocol specificatation.
+Using ``jarn.xmpp.collaboration`` is easy once you have gotten over setting it up. There are no special views to use when you collaboratively edit content. If an adapter to *ICollaborativelyEditable* exists for your content then accessing its edit form will allow multiple users to edit simultaneously.
+
+Out of the box there exist adapters for ATDocument and ATNewsItem as well as a base adapter to ease adapting Archtypes-based content types. These can be used as starting points to allow editing on custom types.
+
+Protocol specification.
 =========================
 
 Initiation
@@ -93,7 +105,11 @@ Define and describe errors and handling.
 Credits
 =======
 
-``jarn.xmpp.collaboration`` relies on the wonderful `Diff-Match-Patch`_ from Neil Fraser at Google. It is distributed under the Apache License 2.0.
-
+* Most of this work was done using the 10% time available to `Jarn AS`_ employees for the development of open-source projects.
+* ``jarn.xmpp.collaboration`` relies on the wonderful `Diff-Match-Patch`_ from Neil Fraser at Google. It is distributed under the Apache License 2.0.
 
 .. _Diff-Match-Patch: http://code.google.com/p/google-diff-match-patch
+.. _Jarn AS: http://jarn.com
+.. _jarn.xmpp.twisted: http://pypi.python.org/pypi/jarn.xmpp.twisted
+.. _jarn.xmpp.core: http://pypi.python.org/pypi/jarn.xmpp.core
+
