@@ -5,6 +5,8 @@ jarnxmpp.ce = {
     shadow_copies: {},
     last_update: {},
     tiny_ids: {},
+    paused_nodes: {},
+    focused_node: null,
 
     _setup: function() {
         var context_url = $('base').attr('href');
@@ -28,7 +30,6 @@ jarnxmpp.ce = {
                     jarnxmpp.ce._setupNode(key);
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
-            //jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[$('*:focus').attr('id')]);
             $('*:focus').each(function () {
                 jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
             });
@@ -76,32 +77,47 @@ jarnxmpp.ce = {
     },
 
     _setContent: function (node_id, content) {
+        var node = jarnxmpp.ce.idToNode[node_id];
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
-            editor.setContent(content);
+            if (jarnxmpp.ce.focused_node === node) {
+                $.doTimeout(100, function () {
+                    jarnxmpp.ce.paused_nodes[node_id] = '';
+                    var caret_id = 'caret-' + Math.floor(Math.random()*100000);
+                    var caret_element = editor.dom.createHTML('a', {'id': caret_id, 'class': 'mceNoEditor'}, ' ');
+                    var selection = editor.selection;
+                    var current_content = editor.getContent();
+                    editor.selection.setContent(caret_element);
+                    // Maybe this will do for IE instead of the above? Need to test
+                    //editor.execCommand('mceInsertContent', false, caret_element);
+                    var bookmark_content = editor.getContent();
+                    var patches = jarnxmpp.ce.dmp.patch_make(current_content, bookmark_content);
+                    content = jarnxmpp.ce.dmp.patch_apply(patches, content)[0];
+                    editor.setContent(content);
+
+                    var doc = editor.getDoc();
+                    var range = doc.createRange();
+                    caret_element = doc.getElementById(caret_id);
+                    range.selectNode(caret_element);
+                    editor.selection.setRng(range);
+                    editor.selection.collapse(0);
+                    delete jarnxmpp.ce.paused_nodes[node_id];
+                    var bm = editor.selection.getBookmark(0, true);
+                    editor.dom.remove(caret_element);
+                    editor.selection.moveToBookmark(bm);
+                    editor.focus();
+                    return false;
+                });
+            } else {
+                editor.setContent(content);
+            }
         } else {
             $('#' + node_id).val(content);
         }
     },
 
-    _getSelection: function(node_id) {
-        if (node_id in jarnxmpp.ce.tiny_ids) {
-            var editor = window.tinyMCE.getInstanceById(node_id);
-            return editor.selection.getBookmark();
-        } else
-            return $('#' + node_id).getSelection();
-    },
-
-    _setSelection: function(node_id, selection) {
-        if (node_id in jarnxmpp.ce.tiny_ids) {
-            var editor = window.tinyMCE.getInstanceById(node_id);
-            return editor.selection.moveToBookmark(selection);
-        } else
-            return $('#' + node_id).setSelection(selection.start, selection.end);
-    },
-
     _updateFocus: function(node_id, jid) {
-        var participant_id = 'node-participant-' + Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
+        var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
         $('#' + participant_id).remove();
         if (node_id !=='') {
             var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
@@ -109,7 +125,12 @@ jarnxmpp.ce = {
         }
     },
 
+    _idFromJID: function(jid) {
+        return Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
+    },
+
     nodeChanged: function (node_id) {
+        if (node_id in jarnxmpp.ce.paused_nodes) return;
         var now = new Date().getTime();
         var node = jarnxmpp.ce.idToNode[node_id];
         if ((now-jarnxmpp.ce.last_update[node]) < 500.0) {
@@ -129,10 +150,13 @@ jarnxmpp.ce = {
         event.node = node;
         event.text = jarnxmpp.ce._getContent(node_id);
         $(document).trigger(event);
+
         return false;
     },
 
     nodeFocused: function (node) {
+        jarnxmpp.ce.focused_node = node;
+        console.log(jarnxmpp.ce.focused_node);
         var message = $msg({to: jarnxmpp.ce.component})
             .c('x', {xmlns: jarnxmpp.ce.NS})
             .c('item', {node: node, action: 'focus', user: jarnxmpp.connection.jid});
@@ -170,9 +194,6 @@ jarnxmpp.ce = {
             var patch_text = $(this).text();
 
             if (action === 'patch') {
-                //
-                // XXX: This should be queued differently including the above...
-                //
                 $(selector).queue('ce', function() {
                     var user_jid = $(this).attr('user');
                     var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
@@ -187,10 +208,7 @@ jarnxmpp.ce = {
                     });
                     // Set shadow
                     jarnxmpp.ce.shadow_copies[node] = shadow;
-                    // Before setting the content predict where the cursor should be
-                    //var selection = jarnxmpp.ce._getSelection(node_id);
                     jarnxmpp.ce._setContent(node_id, shadow);
-                    //jarnxmpp.ce._setSelection(node_id, selection);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
