@@ -79,9 +79,9 @@ jarnxmpp.ce = {
     _setContent: function (node_id, content) {
         var node = jarnxmpp.ce.idToNode[node_id];
         if (node_id in jarnxmpp.ce.tiny_ids) {
-            var editor = window.tinyMCE.getInstanceById(node_id);
             if (jarnxmpp.ce.focused_node === node) {
                 $.doTimeout(100, function () {
+                    var editor = window.tinyMCE.getInstanceById(node_id);
                     jarnxmpp.ce.paused_nodes[node_id] = '';
                     var caret_id = 'caret-' + Math.floor(Math.random()*100000);
                     var caret_element = editor.dom.createHTML('a', {'id': caret_id, 'class': 'mceNoEditor'}, ' ');
@@ -109,6 +109,7 @@ jarnxmpp.ce = {
                     return false;
                 });
             } else {
+                var editor = window.tinyMCE.getInstanceById(node_id);
                 editor.setContent(content);
             }
         } else {
@@ -118,10 +119,17 @@ jarnxmpp.ce = {
 
     _updateFocus: function(node_id, jid) {
         var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
+        var userid = Strophe.getNodeFromJid(jid);
         $('#' + participant_id).remove();
         if (node_id !=='') {
-            var participant_element = $('<span>').attr('id', participant_id).addClass('node-participant').text(jid);
-            $('#' + node_id + '-participants').append(participant_element);
+            $.getJSON(portal_url+"/xmpp-userinfo?user_id="+userid, function(data) {
+                var participant_element = $('<img/>')
+                    .attr('id', participant_id)
+                    .attr('title', data.fullname)
+                    .attr('src', data.portrait_url)
+                    .addClass('node-participant');
+                $('#' + node_id + '-participants').append(participant_element);
+            });
         }
     },
 

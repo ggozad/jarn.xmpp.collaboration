@@ -1,14 +1,6 @@
-.collaborationToolbar {
-}
-
-.collaborationToolbar a {
-	display: block;
-	width: 16px;
-	height: 16px;
+.node-participant {
+	height: 20px;
+	width: 15px;
+	padding: 5px;
 	float: left;
-	margin: 2px;
-}
-
-.collaborationToolbar .save {
-	background: url("++resource++jarn.xmpp.collaboration.images/save.png") -16px 0;
 }
