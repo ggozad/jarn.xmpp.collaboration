@@ -164,7 +164,6 @@ jarnxmpp.ce = {
 
     nodeFocused: function (node) {
         jarnxmpp.ce.focused_node = node;
-        console.log(jarnxmpp.ce.focused_node);
         var message = $msg({to: jarnxmpp.ce.component})
             .c('x', {xmlns: jarnxmpp.ce.NS})
             .c('item', {node: node, action: 'focus', user: jarnxmpp.connection.jid});
