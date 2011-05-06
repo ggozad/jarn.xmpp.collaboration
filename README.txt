@@ -20,7 +20,7 @@ Please see ``jarn.xmpp.core`` for details on setting up your Plone site and xmpp
         {access, all},
         {shaper_rule, fast},
         {ip, {127, 0, 0, 1}},
-        {hosts, ["collaboration.example.com"],
+        {hosts, ["collaboration.myserver"],
             [{password, "secret"}]
         }
     ]},
@@ -43,9 +43,9 @@ Out of the box there exist adapters for ATDocument and ATNewsItem as well as a b
 Protocol specification.
 =========================
 
-Initiation
-----------
-In order to initiate a collaborative editing session, the party sends a presence to the server indicating on which node he wishes to work on. The party MUST specify the `node` attribute in the `query`::
+Initialization
+--------------
+In order to initiate a collaborative editing session, the party sends a presence to the server indicating on which node he wishes to work on. The party MUST specify the `node` attribute in the `query` element::
 
     <presence from='foo@example.com/work' to='collaboration.example.com'>
         <query xmlns='http://jarn.com/ns/collaborative-editing'
@@ -80,6 +80,24 @@ If the server succeeds to apply the patch to its shadow copy, it broadcasts the 
 
 If the server fails to apply the patch (because for instance there was a network problem and the client fell out of sync, or the diff-match-patch application failed), it SHOULD send a ``set`` action to the party with its shadow copy as text.
 
+Focusing
+--------
+In an environment where multiple nodes are edited in the same time (for instance in a context where the content has more than one collaboratively editable fields) the client CAN send a notification specifying which particular node he is currently editing::
+
+    <message from='foo@example.com/work' to='collaboration.example.com'>
+        <x xmlns='http://jarn.com/ns/collaborative-editing'>
+            <item node='collab-node' action='focus' user='foo@example.com/work'/>
+        </x>
+    </message>
+
+The server MUST propagate the message to all other users that are currently collaborating on the node::
+
+    <message from='collaboration.example.com' to='bar@example.com/home'>
+        <x xmlns='http://jarn.com/ns/collaborative-editing'>
+            <item node='collab-node' action='focus' user='foo@example.com/work'/>
+        </x>
+    </message>
+
 Saving
 ------
 At any point a party can request a save. This is done by sending a message whose `item` MUST indicate the node and its action must be set to `save`::
@@ -97,10 +115,6 @@ Termination
 The session is terminated when the party sends an `unavailable` presence::
 
     <presence from='foo@example.com/work' type='unavailable' />
-
-Protocol TODO
--------------
-Define and describe errors and handling.
 
 Credits
 =======

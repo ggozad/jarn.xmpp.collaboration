@@ -26,6 +26,7 @@ setup(name='jarn.xmpp.collaboration',
       zip_safe=False,
       install_requires=[
           'setuptools',
+          'jarn.xmpp.core'
       ],
       extras_require = {
           'test': [
