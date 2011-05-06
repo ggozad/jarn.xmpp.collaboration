@@ -76,35 +76,35 @@ jarnxmpp.ce = {
         }
     },
 
-    _setContent: function (node_id, content) {
+    _setContent: function (node_id, content, patches) {
         var node = jarnxmpp.ce.idToNode[node_id];
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
             if (jarnxmpp.ce.focused_node === node) {
-                    jarnxmpp.ce.paused_nodes[node_id] = '';
-                    var caret_id = 'caret-' + Math.floor(Math.random()*100000);
-                    var caret_element = editor.dom.createHTML('a', {'id': caret_id, 'class': 'mceNoEditor'}, ' ');
-                    var selection = editor.selection;
-                    var current_content = editor.getContent();
-                    editor.selection.setContent(caret_element);
-                    // Maybe this will do for IE instead of the above? Need to test
-                    //editor.execCommand('mceInsertContent', false, caret_element);
-                    var bookmark_content = editor.getContent();
-                    var patches = jarnxmpp.ce.dmp.patch_make(current_content, bookmark_content);
-                    content = jarnxmpp.ce.dmp.patch_apply(patches, content)[0];
-                    editor.setContent(content);
+                // If we are inside the node as well we need some special care.
+                // First we set a bookmark element. Then apply the patches, then remove the bookmark.
+                jarnxmpp.ce.paused_nodes[node_id] = '';
+                var caret_id = 'caret-' + Math.floor(Math.random()*100000);
+                var caret_element = editor.dom.createHTML('a', {'id': caret_id, 'class': 'mceNoEditor'}, ' ');
+                var selection = editor.selection;
+                editor.selection.setContent(caret_element);
+                // Maybe this will do for IE instead of the above? Need to test
+                //editor.execCommand('mceInsertContent', false, caret_element);
+                var bookmark_content = editor.getContent();
+                content = jarnxmpp.ce.dmp.patch_apply(patches, bookmark_content)[0];
+                editor.setContent(content);
 
-                    var doc = editor.getDoc();
-                    var range = doc.createRange();
-                    caret_element = doc.getElementById(caret_id);
-                    range.selectNode(caret_element);
-                    editor.selection.setRng(range);
-                    editor.selection.collapse(0);
-                    delete jarnxmpp.ce.paused_nodes[node_id];
-                    var bm = editor.selection.getBookmark(0, true);
-                    editor.dom.remove(caret_element);
-                    editor.selection.moveToBookmark(bm);
-                    editor.focus();
+                var doc = editor.getDoc();
+                var range = doc.createRange();
+                caret_element = doc.getElementById(caret_id);
+                range.selectNode(caret_element);
+                editor.selection.setRng(range);
+                editor.selection.collapse(0);
+                delete jarnxmpp.ce.paused_nodes[node_id];
+                var bm = editor.selection.getBookmark(0, true);
+                editor.dom.remove(caret_element);
+                editor.selection.moveToBookmark(bm);
+                editor.focus();
             } else {
                 editor.setContent(content);
             }
@@ -207,11 +207,11 @@ jarnxmpp.ce = {
                     $.each(results, function (index, value) {
                         // XXX: Do something about it!
                         if (value!==true)
-                            console.log('Failure at applying patch:' + index + 'of '+results.length);
+                            alert('Failure at applying patch:' + index + 'of '+results.length);
                     });
                     // Set shadow
-                    jarnxmpp.ce._setContent(node_id, shadow);
                     jarnxmpp.ce.shadow_copies[node] = shadow;
+                    jarnxmpp.ce._setContent(node_id, shadow, patches);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
