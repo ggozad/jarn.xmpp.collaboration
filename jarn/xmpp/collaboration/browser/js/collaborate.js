@@ -115,10 +115,10 @@ jarnxmpp.ce = {
 
     _updateFocus: function(node_id, jid) {
         var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
-        var userid = Strophe.getNodeFromJid(jid);
+        var user_id = Strophe.getNodeFromJid(jid);
         $('#' + participant_id).remove();
         if (node_id !=='') {
-            $.getJSON(portal_url+"/xmpp-userinfo?user_id="+userid, function(data) {
+            jarnxmpp.Presence.getUserInfo(user_id, function(data) {
                 var participant_element = $('<img/>')
                     .attr('id', participant_id)
                     .attr('title', data.fullname)
@@ -126,9 +126,6 @@ jarnxmpp.ce = {
                     .addClass('node-participant');
                 $('#' + node_id + '-participants').append(participant_element);
             });
-            //var participant_element = $('<span>').attr('id', participant_id).text(jid);
-            //$('#' + node_id + '-participants').append(participant_element);
-
         }
     },
 
