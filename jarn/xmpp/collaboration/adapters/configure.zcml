@@ -4,5 +4,6 @@
 
     <adapter factory=".atcontenttypes.ATDocumentCEAdapter"/>
     <adapter factory=".atcontenttypes.ATNewsItemCEAdapter"/>
+    <adapter factory=".unlock.CollaborativelyEditableLocking"/>
 
 </configure>
