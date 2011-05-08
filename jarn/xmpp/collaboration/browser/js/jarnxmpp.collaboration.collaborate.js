@@ -76,11 +76,19 @@ jarnxmpp.ce = {
         }
     },
 
-    _setContent: function (node_id, content, patches) {
-        var node = jarnxmpp.ce.idToNode[node_id];
+    _setContent: function (node_id, content) {
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
-            if (jarnxmpp.ce.focused_node === node) {
+            editor.setContent(content);
+        } else
+            $('#' + node_id).val(content);
+    },
+
+    _applyPatches: function (node_id, content, patches) {
+        var node = jarnxmpp.ce.idToNode[node_id];
+        if (jarnxmpp.ce.focused_node === node) {
+            if (node_id in jarnxmpp.ce.tiny_ids) {
+                var editor = window.tinyMCE.getInstanceById(node_id);
                 // If we are inside the node as well we need some special care.
                 // First we set a bookmark element. Then apply the patches, then remove the bookmark.
                 jarnxmpp.ce.paused_nodes[node_id] = '';
@@ -106,10 +114,13 @@ jarnxmpp.ce = {
                 editor.selection.moveToBookmark(bm);
                 editor.focus();
             } else {
-                editor.setContent(content);
+                // We do not deal with preserving the caret for non-tiny fields.
+                // It's simple, FIXIT.
+                jarnxmpp.ce._setContent(node_id, content);
             }
         } else {
-            $('#' + node_id).val(content);
+            // The field has no focus, just set the content
+            jarnxmpp.ce._setContent(node_id, content);
         }
     },
 
@@ -211,7 +222,7 @@ jarnxmpp.ce = {
                     });
                     // Set shadow
                     jarnxmpp.ce.shadow_copies[node] = shadow;
-                    jarnxmpp.ce._setContent(node_id, shadow, patches);
+                    jarnxmpp.ce._applyPatches(node_id, shadow, patches);
                 });
                 $(selector).dequeue('ce');
             } else if (action === 'set') {
