@@ -19,10 +19,7 @@ class CollaborateView(BrowserView):
 
     def __init__(self, context, request):
         super(CollaborateView, self).__init__(context, request)
-        try:
-            self.ceditable = ICollaborativelyEditable(self.context)
-        except TypeError:
-            self.ceditable = None
+        self.ceditable = queryAdapter(self.context, ICollaborativelyEditable)
 
     @property
     def available(self):
