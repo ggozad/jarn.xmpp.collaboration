@@ -87,18 +87,19 @@ jarnxmpp.ce = {
     _applyPatches: function (node_id, content, patches) {
         var node = jarnxmpp.ce.idToNode[node_id];
         if (jarnxmpp.ce.focused_node === node) {
+            var caret_id = 'caret-' + Math.floor(Math.random()*100000);
+            var selection, bookmark_content;
             if (node_id in jarnxmpp.ce.tiny_ids) {
                 var editor = window.tinyMCE.getInstanceById(node_id);
                 // If we are inside the node as well we need some special care.
                 // First we set a bookmark element. Then apply the patches, then remove the bookmark.
                 jarnxmpp.ce.paused_nodes[node_id] = '';
-                var caret_id = 'caret-' + Math.floor(Math.random()*100000);
                 var caret_element = editor.dom.createHTML('a', {'id': caret_id, 'class': 'mceNoEditor'}, ' ');
-                var selection = editor.selection;
+                selection = editor.selection;
                 editor.selection.setContent(caret_element);
                 // Maybe this will do for IE instead of the above? Need to test
                 //editor.execCommand('mceInsertContent', false, caret_element);
-                var bookmark_content = editor.getContent();
+                bookmark_content = editor.getContent();
                 content = jarnxmpp.ce.dmp.patch_apply(patches, bookmark_content)[0];
                 editor.setContent(content);
 
@@ -114,9 +115,16 @@ jarnxmpp.ce = {
                 editor.selection.moveToBookmark(bm);
                 editor.focus();
             } else {
-                // We do not deal with preserving the caret for non-tiny fields.
-                // It's simple, FIXIT.
+                selection = $('#' + node_id).getSelection();
+                selection.end = selection.start;
+                bookmark_content = $('#' + node_id).val();
+                bookmark_content = bookmark_content.substr(0,selection.start) +
+                    caret_id + bookmark_content.substr(selection.start);
+                content = jarnxmpp.ce.dmp.patch_apply(patches, bookmark_content)[0];
+                var new_start = content.search(caret_id);
+                content = content.replace(caret_id, '');
                 jarnxmpp.ce._setContent(node_id, content);
+                $('#' + node_id).setSelection(new_start, new_start + selection.length);
             }
         } else {
             // The field has no focus, just set the content
