@@ -2,8 +2,19 @@
     xmlns="http://namespaces.zope.org/zope"
     i18n_domain="jarn.xmpp.collaboration">
 
+    <!-- Adapters to ICollaborativelyEditable -->
     <adapter factory=".atcontenttypes.ATDocumentCEAdapter"/>
     <adapter factory=".atcontenttypes.ATNewsItemCEAdapter"/>
+
+    <!-- Disable locking on INonLockable-->
+    <class class="Products.ATContentTypes.content.document.ATDocument">
+      <implements interface="..interfaces.INonLockable" />
+    </class>
+
+    <class class="Products.ATContentTypes.content.newsitem.ATNewsItem">
+      <implements interface="..interfaces.INonLockable" />
+    </class>
+
     <adapter factory=".unlock.CollaborativelyEditableLocking"/>
 
 </configure>

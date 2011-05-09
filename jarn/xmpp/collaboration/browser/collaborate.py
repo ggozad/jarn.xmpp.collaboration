@@ -4,6 +4,7 @@ import logging
 from plone.registry.interfaces import IRegistry
 from zope.component import getUtility
 from zope.component import queryUtility
+from zope.component import queryAdapter
 from zope.publisher.browser import BrowserView
 
 from jarn.xmpp.collaboration.interfaces import ICollaborativeEditingComponent
