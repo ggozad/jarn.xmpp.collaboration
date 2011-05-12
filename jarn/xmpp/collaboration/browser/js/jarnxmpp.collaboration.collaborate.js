@@ -132,6 +132,8 @@ jarnxmpp.ce = {
             // The field has no focus, just set the content
             jarnxmpp.ce._setContent(node_id, content);
         }
+        $('#' + participant_id).fadeTo('fast', 0.1);
+        $('#' + participant_id).fadeTo('fast', 1.0);
     },
 
     _updateFocus: function(node_id, jid) {
