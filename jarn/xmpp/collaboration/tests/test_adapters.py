@@ -10,6 +10,7 @@ from jarn.xmpp.collaboration.testing import COLLABORATION_INTEGRATION_TESTING
 class CEAdapterTest(unittest.TestCase):
 
     layer = COLLABORATION_INTEGRATION_TESTING
+    level = 2
 
     def test_atdocument(self):
         portal = self.layer['portal']
