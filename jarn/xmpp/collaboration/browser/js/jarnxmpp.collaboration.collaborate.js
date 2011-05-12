@@ -84,8 +84,10 @@ jarnxmpp.ce = {
             $('#' + node_id).val(content);
     },
 
-    _applyPatches: function (node_id, content, patches) {
+    _applyPatches: function (node_id, content, patches, user_jid) {
         var node = jarnxmpp.ce.idToNode[node_id];
+        var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(user_jid);
+
         if (jarnxmpp.ce.focused_node === node) {
             var caret_id = 'caret-' + Math.floor(Math.random()*100000);
             var selection, bookmark_content;
@@ -214,30 +216,28 @@ jarnxmpp.ce = {
             var node_id = jarnxmpp.ce.nodeToId[node];
             var selector = '#' + node_id;
             var patch_text = $(this).text();
+            var user_jid;
 
             if (action === 'patch') {
-                $(selector).queue('ce', function() {
-                    var user_jid = $(this).attr('user');
-                    var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
-                    var shadow = jarnxmpp.ce.shadow_copies[node];
-                    var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
-                    shadow = patch_applications[0];
-                    var results = patch_applications[1];
-                    $.each(results, function (index, value) {
-                        // XXX: Do something about it!
-                        if (value!==true)
-                            alert('Failure at applying patch:' + index + 'of '+results.length);
-                    });
-                    // Set shadow
-                    jarnxmpp.ce.shadow_copies[node] = shadow;
-                    jarnxmpp.ce._applyPatches(node_id, shadow, patches);
+                user_jid = $(this).attr('user');
+                var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
+                var shadow = jarnxmpp.ce.shadow_copies[node];
+                var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
+                shadow = patch_applications[0];
+                var results = patch_applications[1];
+                $.each(results, function (index, value) {
+                    // XXX: Do something about it!
+                    if (value!==true)
+                        alert('Failure at applying patch:' + index + 'of '+results.length);
                 });
-                $(selector).dequeue('ce');
+                // Set shadow
+                jarnxmpp.ce.shadow_copies[node] = shadow;
+                jarnxmpp.ce._applyPatches(node_id, shadow, patches, user_jid);
             } else if (action === 'set') {
                 jarnxmpp.ce._setContent(node_id, patch_text);
                 jarnxmpp.ce.shadow_copies[node] = patch_text;
             } else if (action === 'focus') {
-                var user_jid = $(this).attr('user');
+                user_jid = $(this).attr('user');
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
             }
         });
