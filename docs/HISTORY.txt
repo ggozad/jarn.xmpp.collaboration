@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1a2 - Unreleased
+------------------
+
+- Provide visual feedback when a user updates a node.
+  [ggozad]
+
 0.1a1 2010-05-09
 ----------------
 
