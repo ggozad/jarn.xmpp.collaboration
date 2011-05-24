@@ -30,7 +30,11 @@ setup(name='jarn.xmpp.collaboration',
       ],
       extras_require = {
           'test': [
-                  'plone.app.testing',
+              'plone.app.testing',
+              ],
+          'dexterity': [
+              'plone.app.dexterity',
+              'plone.app.referenceablebehavior',
               ]
       },
       entry_points="""
