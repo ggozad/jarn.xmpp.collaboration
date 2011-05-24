@@ -7,11 +7,11 @@ from plone.uuid.interfaces import IUUID
 from plone.dexterity.interfaces import IDexterityFTI, IDexterityContent
 from plone.app.textfield.interfaces import IRichText, IRichTextValue
 
-from jarn.xmpp.collaboration.adapters.atcontenttypes import ATContentTypeCEAdapterBase
+from jarn.xmpp.collaboration.adapters.base import CEAdapterBase
 from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
 
 
-class DexterityCEAdapter(ATContentTypeCEAdapterBase):
+class DexterityCEAdapter(CEAdapterBase):
     implements(ICollaborativelyEditable)
     adapts(IDexterityContent)
 

@@ -1,118 +1,41 @@
-from Products.ATContentTypes.interfaces.document import IATDocument
-from Products.ATContentTypes.interfaces.news import IATNewsItem
+from Products.Archetypes.interfaces import IStringField, ITextField
+from Products.Archetypes.Widget import RichWidget
+from Products.ATContentTypes.interfaces import IATContentType
 
+from zope.cachedescriptors.property import Lazy as lazy_property
 from zope.component import adapts
 from zope.interface import implements
 
 from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
+from jarn.xmpp.collaboration.adapters.base import CEAdapterBase
 
 
-class ATContentTypeCEAdapterBase(object):
-
-    def __init__(self, context):
-        self.context = context
-
-    @property
-    def htmlIDs(self):
-        return []
-
-    @property
-    def contentUID(self):
-        return self.context.UID()
-
-    @property
-    def nodeIDs(self):
-        return [self._htmlIDToNodeId(html_id) for html_id in self.htmlIDs]
-
-    @property
-    def nodeToId(self):
-        r = dict()
-        for html_id in self.htmlIDs:
-            r[self._htmlIDToNodeId(html_id)] = html_id
-        return r
-
-    @property
-    def idToNode(self):
-        r = dict()
-        for html_id in self.htmlIDs:
-            r[html_id] = self._htmlIDToNodeId(html_id)
-        return r
-
-    def getNodeTextFromHtmlID(html_id):
-        return ''
-
-    def _htmlIDToNodeId(self, html_id):
-        return self.contentUID + '#' + html_id
-
-    def _UIDAndIDFromNodeID(self, nodeid):
-        return tuple(nodeid.split('#'))
-
-
-class ATDocumentCEAdapter(ATContentTypeCEAdapterBase):
-
+class ATContentTypesCEAdapter(CEAdapterBase):
     implements(ICollaborativelyEditable)
-    adapts(IATDocument)
+    adapts(IATContentType)
+
+    @lazy_property
+    def _ce_fields(self):
+        ce_fields = [field
+                     for field in self.context.schema.fields()
+                     if (IStringField.providedBy(field)
+                         or ITextField.providedBy(field))
+                        and field.schemata=='default'
+                        and field.getName()!='id']
+        return ce_fields
 
     @property
     def htmlIDs(self):
-        return ['title', 'description', 'text']
+        return [field.getName() for field in self._ce_fields]
 
     @property
     def tinyIDs(self):
-        return ['text']
+        return [field.getName()
+                for field in self._ce_fields
+                if isinstance(field.widget, RichWidget)]
 
     def getNodeTextFromHtmlID(self, html_id):
-        text = ''
-        if html_id == 'title':
-            text = self.context.Title()
-        elif html_id == 'description':
-            text = self.context.Description()
-        elif html_id == 'text':
-            text =self.context.getRawText()
-        text = text.decode('utf-8')
-        return text
+        return self.context.schema[html_id].getRaw(self.context).decode('utf-8')
 
     def setNodeTextFromHtmlID(self, html_id, text):
-        if html_id == 'title':
-            self.context.setTitle(text)
-        elif html_id == 'description':
-            self.context.setDescription(text)
-        elif html_id == 'text':
-            self.context.setText(text, mimetype='text/html')
-
-
-class ATNewsItemCEAdapter(ATContentTypeCEAdapterBase):
-
-    implements(ICollaborativelyEditable)
-    adapts(IATNewsItem)
-
-    @property
-    def htmlIDs(self):
-        return ['title', 'description', 'text', 'imageCaption']
-
-    @property
-    def tinyIDs(self):
-        return ['text']
-
-    def getNodeTextFromHtmlID(self, html_id):
-        text = ''
-        if html_id == 'title':
-            text = self.context.Title()
-        elif html_id == 'description':
-            text = self.context.Description()
-        elif html_id == 'text':
-            text =self.context.getRawText()
-        elif html_id == 'imageCaption':
-            text =self.context.getImageCaption()
-        text = text.decode('utf-8')
-        return text
-
-    def setNodeTextFromHtmlID(self, html_id, text):
-        if html_id == 'title':
-            self.context.setTitle(text)
-        elif html_id == 'description':
-            self.context.setDescription(text)
-        elif html_id == 'text':
-            self.context.setText(text, mimetype='text/html')
-        elif html_id == 'imageCaption':
-            text =self.context.setImageCaption(text)
+        self.context.schema[html_id].set(self.context, text)

@@ -3,10 +3,15 @@ Changelog
 
 0.1a2 - Unreleased
 ------------------
-- Basic dexterity support.
+- Dexterity content type support.
   [davisagli]
+
+- Generalized ATContentTypes support.
+  [ggozad]
+
 - Provide visual feedback when a user updates a node.
   [ggozad]
+
 - Run tests requiring the EJABBERD layer only when level 2 is specified on the
   testrunner.
   [ggozad]

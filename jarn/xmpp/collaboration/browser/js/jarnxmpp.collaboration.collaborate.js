@@ -249,8 +249,8 @@ jarnxmpp.ce = {
 
 $(document).bind('jarnxmpp.connected', function () {
     if (($('form[name="edit_form"]').length &&
-        $('base').attr('href').indexOf('portal_factory')===-1)
-        || $('body').hasClass('template-edit')) {
+        $('base').attr('href').indexOf('portal_factory')===-1) ||
+        $('body').hasClass('template-edit')) {
         jarnxmpp.ce._setup();
     }
 });
