@@ -8,7 +8,6 @@ class ICollaborativelyEditable(Interface):
 
     nodeToId = Attribute("""A mapping of node id -> html id for this object""")
     idToNode = Attribute("""A mapping of html id -> node id for this object""")
-    tinyIDs = Attribute("""A list of html ids that correspond to TinyMCE instances""")
 
     def getNodeTextFromHtmlID(html_id):
         """Get the text of the object identified by html_id."""

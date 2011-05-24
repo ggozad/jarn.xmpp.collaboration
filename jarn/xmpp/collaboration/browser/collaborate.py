@@ -36,5 +36,4 @@ class CollaborateView(BrowserView):
         return json.dumps({
             'component': component_jid,
             'nodeToId': self.ceditable.nodeToId,
-            'idToNode': self.ceditable.idToNode,
-            'tiny_ids': self.ceditable.tinyIDs})
+            'idToNode': self.ceditable.idToNode})

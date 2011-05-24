@@ -30,7 +30,6 @@ class CEAdapterTest(unittest.TestCase):
                           uid + '#' + 'description',
                           uid + '#' + 'text'],
                          ce.nodeIDs)
-        self.assertEqual(['text'], ce.tinyIDs)
 
     def test_atnewsitem(self):
         portal = self.layer['portal']
@@ -52,4 +51,3 @@ class CEAdapterTest(unittest.TestCase):
                           uid + '#' + 'text',
                           uid + '#' + 'imageCaption'],
                          ce.nodeIDs)
-        self.assertEqual(['text'], ce.tinyIDs)

@@ -17,9 +17,6 @@ jarnxmpp.ce = {
             jarnxmpp.ce.component = data.component;
             jarnxmpp.ce.nodeToId = data.nodeToId;
             jarnxmpp.ce.idToNode = data.idToNode;
-            $.each(data.tiny_ids, function (index, value) {
-                    jarnxmpp.ce.tiny_ids[value] = '';
-            });
             jarnxmpp.ce.dmp.Match_Threshold=0.5;
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
             jarnxmpp.connection.addHandler(jarnxmpp.ce.messageReceived, null, 'message', null, null, jarnxmpp.ce.component);
@@ -44,8 +41,10 @@ jarnxmpp.ce = {
         var presence = $pres({to: jarnxmpp.ce.component})
             .c('query', {xmlns: jarnxmpp.ce.NS, 'node':node});
         jarnxmpp.connection.send(presence);
-        if (node_id in jarnxmpp.ce.tiny_ids) {
-            var editor = window.tinyMCE.getInstanceById(node_id);
+        var editor = window.tinyMCE.getInstanceById(node_id);
+
+        if (editor!==undefined) {
+            jarnxmpp.ce.tiny_ids[node_id] = '';
             editor.onKeyUp.add(function (ed, l) {
                 jarnxmpp.ce.nodeChanged(editor.id);
             });

@@ -35,15 +35,6 @@ class DexterityCEAdapter(CEAdapterBase):
         return ids
 
     @property
-    def tinyIDs(self):
-        ids = []
-        schema = self._schema
-        for f in schema:
-            if IRichText.providedBy(schema[f]):
-                ids.append('form.widgets.%s' % f)
-        return ids
-
-    @property
     def contentUID(self):
         return IUUID(self.context)
 

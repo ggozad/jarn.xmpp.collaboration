@@ -1,5 +1,4 @@
 from Products.Archetypes.interfaces import IStringField, ITextField
-from Products.Archetypes.Widget import RichWidget
 from Products.ATContentTypes.interfaces import IATContentType
 
 from zope.cachedescriptors.property import Lazy as lazy_property
@@ -32,12 +31,6 @@ class ATContentTypesCEAdapter(CEAdapterBase):
     @property
     def htmlIDs(self):
         return [field.getName() for field in self._ce_fields]
-
-    @property
-    def tinyIDs(self):
-        return [field.getName()
-                for field in self._ce_fields
-                if isinstance(field.widget, RichWidget)]
 
     def getNodeTextFromHtmlID(self, html_id):
         return self.context.schema[html_id].getRaw(self.context).decode('utf-8')
