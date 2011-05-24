@@ -8,12 +8,8 @@
 
     <adapter factory=".atcontenttypes.ATContentTypesCEAdapter" />
 
-    <!-- Disable locking on INonLockable-->
-    <class class="Products.ATContentTypes.content.document.ATDocument">
-      <implements interface="..interfaces.INonLockable" />
-    </class>
-
-    <class class="Products.ATContentTypes.content.newsitem.ATNewsItem">
+    <!-- Disable locking on ATContentTypes-->
+    <class class="Products.ATContentTypes.content.base.ATCTMixin">
       <implements interface="..interfaces.INonLockable" />
     </class>
 
