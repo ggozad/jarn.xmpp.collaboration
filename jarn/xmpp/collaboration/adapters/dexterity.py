@@ -48,7 +48,6 @@ class DexterityCEAdapter(ATContentTypeCEAdapterBase):
         return IUUID(self.context)
 
     def getNodeTextFromHtmlID(self, html_id):
-        import pdb; pdb.set_trace( )
         fname = html_id[13:]
         value = self._schema[fname].get(self.context)
         if IRichTextValue.providedBy(value):
@@ -56,7 +55,6 @@ class DexterityCEAdapter(ATContentTypeCEAdapterBase):
         return value
 
     def setNodeTextFromHtmlID(self, html_id, text):
-        import pdb; pdb.set_trace( )
         fname = html_id[13:]
         field = self._schema[fname]
         text = field.fromUnicode(text)
