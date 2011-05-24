@@ -25,6 +25,11 @@ class ATContentTypesCEAdapter(CEAdapterBase):
         return ce_fields
 
     @property
+    def contentUID(self):
+        return self.context.UID()
+
+
+    @property
     def htmlIDs(self):
         return [field.getName() for field in self._ce_fields]
 

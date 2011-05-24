@@ -9,7 +9,7 @@ class CEAdapterBase(object):
 
     @property
     def contentUID(self):
-        return self.context.UID()
+        return ''
 
     @property
     def nodeIDs(self):
