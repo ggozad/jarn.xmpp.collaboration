@@ -5,8 +5,8 @@
     i18n_domain="jarn.xmpp.collaboration">
 
     <!-- Adapters to ICollaborativelyEditable -->
-    <adapter factory=".atcontenttypes.ATDocumentCEAdapter"/>
-    <adapter factory=".atcontenttypes.ATNewsItemCEAdapter"/>
+
+    <adapter factory=".atcontenttypes.ATContentTypesCEAdapter" />
 
     <!-- Disable locking on INonLockable-->
     <class class="Products.ATContentTypes.content.document.ATDocument">
