@@ -38,7 +38,7 @@ Usage
 
 Using ``jarn.xmpp.collaboration`` is easy once you have gotten over setting it up. There are no special views to use when you collaboratively edit content. If an adapter to *ICollaborativelyEditable* exists for your content then accessing its edit form will allow multiple users to edit simultaneously.
 
-Out of the box there exist adapters for ATDocument and ATNewsItem as well as a base adapter to ease adapting Archtypes-based content types. These can be used as starting points to allow editing on custom types.
+Out of the box there exist adapters for archetypes as well as dexterity-based content types.
 
 Protocol specification.
 =========================
