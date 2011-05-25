@@ -21,19 +21,14 @@ class CollaborateView(BrowserView):
         super(CollaborateView, self).__init__(context, request)
         self.ceditable = queryAdapter(self.context, ICollaborativelyEditable)
 
-    @property
-    def available(self):
-        if self.ceditable is not None and queryUtility(ICollaborativeEditingComponent):
-            return True
-        return False
-
     def __call__(self):
-        if not self.available:
-            return
         registry = getUtility(IRegistry)
         component_jid = registry.get('jarn.xmpp.collaborationJID')
-        if component_jid is None:
-            return
+        component = queryUtility(ICollaborativeEditingComponent)
+
+        if self.ceditable is None or component is None or component_jid is None:
+            return #pragma no cover
+
         return json.dumps({
             'component': component_jid,
             'nodeToId': self.ceditable.nodeToId,
