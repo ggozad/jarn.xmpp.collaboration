@@ -3,12 +3,12 @@ from plone.app.testing import applyProfile
 from plone.app.testing import IntegrationTesting, FunctionalTesting
 from zope.configuration import xmlconfig
 
-from jarn.xmpp.core.testing import XMPPCORE_FIXTURE
+from jarn.xmpp.core.testing import XMPPCORE_NO_REACTOR_FIXTURE
 
 
 class CollaborationFixture(PloneSandboxLayer):
 
-    defaultBases = (XMPPCORE_FIXTURE, )
+    defaultBases = (XMPPCORE_NO_REACTOR_FIXTURE, )
 
     def setUpZope(self, app, configurationContext):
         # Load ZCML
