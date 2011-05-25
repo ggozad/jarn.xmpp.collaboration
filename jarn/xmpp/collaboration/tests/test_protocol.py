@@ -121,8 +121,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
 
         def cb(info):
             discoInfo = disco.DiscoInfo()
-            for item in info:
-                discoInfo.append(item)
+            self.assertEqual([], info)
             self.assertNotIn('http://jarn.com/ns/collaborative-editing',
                              discoInfo.features)
 
