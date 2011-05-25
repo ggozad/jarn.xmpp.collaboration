@@ -23,8 +23,9 @@ class CollaborateView(BrowserView):
 
     @property
     def available(self):
-        return self.ceditable is not None and \
-            queryUtility(ICollaborativeEditingComponent)
+        if self.ceditable is not None and queryUtility(ICollaborativeEditingComponent):
+            return True
+        return False
 
     def __call__(self):
         if not self.available:

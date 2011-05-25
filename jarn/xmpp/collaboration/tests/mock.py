@@ -24,3 +24,11 @@ class MockDifferentialSyncronisationHandler(DifferentialSyncronisationHandler):
 
     def userLeft(self, user, node):
         pass
+
+
+class MockCollaborationComponent(object):
+    """
+    A mock collaboration component.
+    """
+
+    pass
