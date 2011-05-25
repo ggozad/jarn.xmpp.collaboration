@@ -4,11 +4,11 @@ class CEAdapterBase(object):
         self.context = context
 
     @property
-    def htmlIDs(self):
+    def htmlIDs(self): #pragma: no cover
         return []
 
     @property
-    def contentUID(self):
+    def contentUID(self): #pragma: no cover
         return ''
 
     @property
@@ -29,11 +29,8 @@ class CEAdapterBase(object):
             r[html_id] = self._htmlIDToNodeId(html_id)
         return r
 
-    def getNodeTextFromHtmlID(html_id):
+    def getNodeTextFromHtmlID(html_id): #pragma: no cover
         return ''
 
     def _htmlIDToNodeId(self, html_id):
         return self.contentUID + '#' + html_id
-
-    def _UIDAndIDFromNodeID(self, nodeid):
-        return tuple(nodeid.split('#'))
