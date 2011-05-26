@@ -14,16 +14,17 @@ It is part of a suite of packages aiming to provide XMPP services to Plone. The 
 
 Requirements
 ============
-Please see ``jarn.xmpp.core`` for details on setting up your Plone site and xmpp server. Additionally, your XMPP server must accept connections from external componenents. For ``ejabberd`` this is done by::
+Please see ``jarn.xmpp.core`` for details on setting up your Plone site and xmpp server. If you are not using the recipe included in `jarn.xmpp.buildout` you will need to configure your ejabberd to allow connections from the collaboration component. For ``ejabberd`` this is done by including the following in your config file::
 
-    {5347, ejabberd_service, [
-        {access, all},
-        {shaper_rule, fast},
-        {ip, {127, 0, 0, 1}},
-        {hosts, ["collaboration.myserver"],
-            [{password, "secret"}]
-        }
-    ]},
+    {{5347, {0,0,0,0} }, ejabberd_service, [
+      {access, all},
+      {shaper_rule, fast},
+      {ip, {127, 0, 0, 1}},
+      {hosts, ["collaboration.myserver", "collaboration.localhost"],
+       [{password, "secret"}]
+      }
+     ]},
+
 
 The instance that is going to be running the xmpp component should include the ``component.zcml``. You can do this in your buildout::
 
@@ -116,19 +117,11 @@ The session is terminated when the party sends an `unavailable` presence::
 
     <presence from='foo@example.com/work' type='unavailable' />
 
-Testing
-=======
-
-Some of the included tests are functional tests that require a XMPP server running on ``localhost`` as well as an administrator account setup up on this server with JID ``admin@localhost`` and password ``admin``. If you wish to run those you have to specify a *level* 2 on your testrunner, i.e.
-
-    ::
-
-    ./bin/test -a 2 -s jarn.xmpp.collaboration
-
 Credits
 =======
 
 * Most of this work was done using the 10% time available to `Jarn AS`_ employees for the development of open-source projects.
+* David Glick (davisagli) for dexterity support and general awesomeness.
 * ``jarn.xmpp.collaboration`` relies on the wonderful `Diff-Match-Patch`_ from Neil Fraser at Google. It is distributed under the Apache License 2.0.
 
 .. _Diff-Match-Patch: http://code.google.com/p/google-diff-match-patch
