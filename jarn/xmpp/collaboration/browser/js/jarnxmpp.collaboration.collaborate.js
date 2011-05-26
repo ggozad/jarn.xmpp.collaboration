@@ -154,7 +154,7 @@ jarnxmpp.ce = {
     },
 
     _idFromJID: function(jid) {
-        return Strophe.getNodeFromJid(jid) + Strophe.getDomainFromJid(jid) + Strophe.getResourceFromJid(jid);
+        return Strophe.getNodeFromJid(jid) + Strophe.getResourceFromJid(jid);
     },
 
     nodeChanged: function (node_id) {
