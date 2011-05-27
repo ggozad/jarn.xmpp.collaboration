@@ -114,9 +114,11 @@ def setupCollaborationComponent(portal, event):
         registry = getUtility(IRegistry)
         component_jid = registry.get('jarn.xmpp.collaborationJID')
         xmpp_domain = registry.get('jarn.xmpp.xmppDomain')
+        password = registry.get('jarn.xmpp.collaborationPassword')
+        port = registry.get('jarn.xmpp.collaborationPort')
         if component_jid is None or xmpp_domain is None:
             return
 
-        component = XMPPComponent(xmpp_domain, 5347,
-            component_jid, 'secret', [CollaborationHandler(portal)])
+        component = XMPPComponent(xmpp_domain, port,
+            component_jid, password, [CollaborationHandler(portal)])
         gsm.registerUtility(component, ICollaborativeEditingComponent)

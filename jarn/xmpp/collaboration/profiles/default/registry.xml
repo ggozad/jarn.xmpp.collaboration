@@ -8,4 +8,18 @@
     <value>collaboration.myserver</value>
   </record>
 
+  <record name="jarn.xmpp.collaborationPassword">
+    <field type="plone.registry.field.Password">
+      <title>Component password</title>
+    </field>
+    <value>secret</value>
+  </record>
+
+  <record name="jarn.xmpp.collaborationPort">
+    <field type="plone.registry.field.Int">
+      <title>XMPP Server component port</title>
+    </field>
+    <value>5347</value>
+  </record>
+
 </registry>
