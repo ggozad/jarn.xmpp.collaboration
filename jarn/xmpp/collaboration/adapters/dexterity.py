@@ -30,8 +30,10 @@ class DexterityCEAdapter(CEAdapterBase):
         schema = self._schema
         for f in schema:
             field = schema[f]
-            if ITextLine.providedBy(field) or IRichText.providedBy(field) or IText.providedBy(field):
+            if ITextLine.providedBy(field) or IText.providedBy(field):
                 ids.append('form-widgets-%s' % f)
+            elif IRichText.providedBy(field):
+                ids.append('form.widgets.%s' % f) # Talk about uniformity ;)
         return ids
 
     @property
