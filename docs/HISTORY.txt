@@ -3,6 +3,9 @@ Changelog
 
 0.1a2 - Unreleased
 ------------------
+- Configure the component/server password and connection port in p.a.registry.
+  [ggozad]
+
 - Dexterity content type support.
   [davisagli]
 
