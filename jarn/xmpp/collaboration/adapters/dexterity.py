@@ -1,7 +1,7 @@
 from zope.cachedescriptors.property import Lazy as lazy_property
 from zope.component import adapts, getUtility
 from zope.interface import implements
-from zope.schema.interfaces import ITextLine
+from zope.schema.interfaces import ITextLine, IText
 
 from plone.uuid.interfaces import IUUID
 from plone.dexterity.interfaces import IDexterityFTI, IDexterityContent
@@ -30,7 +30,7 @@ class DexterityCEAdapter(CEAdapterBase):
         schema = self._schema
         for f in schema:
             field = schema[f]
-            if ITextLine.providedBy(field) or IRichText.providedBy(field):
+            if ITextLine.providedBy(field) or IRichText.providedBy(field) or IText.providedBy(field):
                 ids.append('form.widgets.%s' % f)
         return ids
 
