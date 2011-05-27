@@ -31,7 +31,7 @@ class DexterityCEAdapter(CEAdapterBase):
         for f in schema:
             field = schema[f]
             if ITextLine.providedBy(field) or IRichText.providedBy(field) or IText.providedBy(field):
-                ids.append('form.widgets.%s' % f)
+                ids.append('form-widgets-%s' % f)
         return ids
 
     @property
