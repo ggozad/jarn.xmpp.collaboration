@@ -116,7 +116,8 @@ def setupCollaborationComponent(portal, event):
         xmpp_domain = registry.get('jarn.xmpp.xmppDomain')
         password = registry.get('jarn.xmpp.collaborationPassword')
         port = registry.get('jarn.xmpp.collaborationPort')
-        if component_jid is None or xmpp_domain is None:
+        if component_jid is None or xmpp_domain is None or password is None or port is None:
+            logger.error('Could not connect the Collaboration component, check your registry settings')
             return
 
         component = XMPPComponent(xmpp_domain, port,
