@@ -27,9 +27,6 @@ jarnxmpp.ce = {
                     jarnxmpp.ce._setupNode(key);
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
-            $('*:focus').each(function () {
-                jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
-            });
         });
     },
 
@@ -63,9 +60,6 @@ jarnxmpp.ce = {
                 jarnxmpp.ce.nodeFocused(jarnxmpp.ce.idToNode[this.id]);
             });
         }
-        //if (node_id in jarnxmpp.ce.tiny_ids)
-        //    $(editor.container).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants')); 
-        //else
         $(jqid).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants'));
     },
 
