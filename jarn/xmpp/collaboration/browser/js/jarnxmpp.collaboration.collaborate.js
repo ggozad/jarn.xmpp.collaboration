@@ -21,12 +21,10 @@ jarnxmpp.ce = {
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
             jarnxmpp.connection.addHandler(jarnxmpp.ce.messageReceived, null, 'message', null, null, jarnxmpp.ce.component);
 
-            jarnxmpp.connection.pause();
             // Setup up nodes.
             for (var key in jarnxmpp.ce.nodeToId)
                 if (jarnxmpp.ce.nodeToId.hasOwnProperty(key))
                     jarnxmpp.ce._setupNode(key);
-            jarnxmpp.connection.resume();
 
             $(document).bind('jarnxmpp.ce.nodeChanged', jarnxmpp.ce.sendPatch);
             $('*:focus').each(function () {
