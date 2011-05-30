@@ -12,7 +12,7 @@ from jarn.xmpp.core.testing import XMPPCORE_NO_REACTOR_FIXTURE
 try:
     import plone.app.dexterity
     HAS_DEXTERITY = True
-except:
+except ImportError:
     HAS_DEXTERITY = False
 
 
