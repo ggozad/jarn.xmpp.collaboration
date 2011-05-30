@@ -18,8 +18,7 @@ Changelog
 - JS cleanup.
   [ggozad]
 
-- Run tests requiring the EJABBERD layer only when level 2 is specified on the
-  testrunner.
+- Test coverage.
   [ggozad]
 
 0.1a1 2010-05-09
