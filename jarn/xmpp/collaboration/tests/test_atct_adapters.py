@@ -9,7 +9,7 @@ from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
 from jarn.xmpp.collaboration.testing import COLLABORATION_INTEGRATION_TESTING
 
 
-class CEAdapterTest(unittest.TestCase):
+class ATCTCEAdapterTest(unittest.TestCase):
 
     layer = COLLABORATION_INTEGRATION_TESTING
 
