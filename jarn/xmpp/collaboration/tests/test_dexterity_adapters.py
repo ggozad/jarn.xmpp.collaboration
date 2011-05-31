@@ -25,17 +25,15 @@ class DexterityCEAdapterTest(unittest.TestCase):
             richtext='Some richtext')
         self.doc = portal['adoc']
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_can_adapt(self):
-        self.assertTrue(queryAdapter(self.doc, ICollaborativelyEditable) is not None)
+        self.assertTrue(
+            queryAdapter(self.doc, ICollaborativelyEditable) is not None)
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_contentUID(self):
         uid = IUUID(self.doc)
         ce = ICollaborativelyEditable(self.doc)
         self.assertEqual(uid, ce.contentUID)
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_htmlIds(self):
         ce = ICollaborativelyEditable(self.doc)
         self.assertEqual(['form-widgets-text',
@@ -43,7 +41,6 @@ class DexterityCEAdapterTest(unittest.TestCase):
                           'form.widgets.richtext'],
                          ce.htmlIDs)
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_nodeIds(self):
         uid = IUUID(self.doc)
         ce = ICollaborativelyEditable(self.doc)
@@ -52,29 +49,32 @@ class DexterityCEAdapterTest(unittest.TestCase):
                           uid + '#' + 'form.widgets.richtext'],
                           ce.nodeIDs)
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_getNodeTextFromHtmlID(self):
         ce = ICollaborativelyEditable(self.doc)
         self.assertEqual(ce.getNodeTextFromHtmlID('form-widgets-text'),
                          'Some text')
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_setNodeTextFromHtmlID(self):
         ce = ICollaborativelyEditable(self.doc)
         ce.setNodeTextFromHtmlID('form-widgets-text',
                                  'New text'.decode('utf-8'))
         self.assertEqual('New text', self.doc.text)
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_nodeToId(self):
         uid = IUUID(self.doc)
         ce = ICollaborativelyEditable(self.doc)
         self.assertEqual('form-widgets-text',
                          ce.nodeToId[uid + '#' + 'form-widgets-text'])
 
-    @unittest.skipUnless(HAS_DEXTERITY, "requires Dexterity")
     def test_idToNode(self):
         uid = IUUID(self.doc)
         ce = ICollaborativelyEditable(self.doc)
         self.assertEqual(uid + '#' + 'form-widgets-text',
                          ce.idToNode['form-widgets-text'])
+
+
+def test_suite():
+    suite = unittest.TestSuite()
+    if HAS_DEXTERITY:
+        suite.addTest(unittest.makeSuite(DexterityCEAdapterTest))
+    return suite
