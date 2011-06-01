@@ -39,7 +39,7 @@ Usage
 
 Using ``jarn.xmpp.collaboration`` is easy once you have gotten over setting it up. There are no special views to use when you collaboratively edit content. If an adapter to *ICollaborativelyEditable* exists for your content then accessing its edit form will allow multiple users to edit simultaneously.
 
-Out of the box there exist adapters for archetypes as well as dexterity-based content types. For AT content types fields that implement ``IStringField`` or ``ITextField`` will automatically get collaborative editing support. For Dexterity the fields that will be automatically included are those in the schema that provide ``ITextLine``, ``IText`` or ``IRichText``. Note that the javascript client assumes that TinyMCE is used. Collaboration on rich text fields will not work with Kupu.
+Out of the box there exist adapters for archetypes as well as dexterity-based content types. For AT content types fields that implement ``IStringField`` or ``ITextField`` will automatically get collaborative editing support. For Dexterity the fields that will be automatically included are those that provide ``ITextLine``, ``IText`` or ``IRichText`` regardless of the *behavior* by which they are defined. Note that the javascript client assumes that TinyMCE is used. Collaboration on rich text fields will not work with Kupu.
 
 Protocol specification.
 =========================
