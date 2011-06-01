@@ -20,6 +20,7 @@ class DexterityCEAdapterTest(unittest.TestCase):
         setRoles(portal, TEST_USER_ID, ['Contributor'])
         portal.invokeFactory('mytype', 'adoc',
             title='A title',
+            description='A description',
             textline='A textline',
             text='Some text',
             richtext='Some richtext')
@@ -36,18 +37,24 @@ class DexterityCEAdapterTest(unittest.TestCase):
 
     def test_htmlIds(self):
         ce = ICollaborativelyEditable(self.doc)
-        self.assertEqual(['form-widgets-text',
-                          'form-widgets-textline',
-                          'form.widgets.richtext'],
-                         ce.htmlIDs)
+        self.assertEqual(set(['form-widgets-title',
+                              'form-widgets-description',
+                              'form-widgets-rights',
+                              'form-widgets-textline',
+                              'form-widgets-text',
+                              'form.widgets.richtext']),
+                         set(ce.htmlIDs))
 
     def test_nodeIds(self):
         uid = IUUID(self.doc)
         ce = ICollaborativelyEditable(self.doc)
-        self.assertEqual([uid + '#' + 'form-widgets-text',
-                          uid + '#' + 'form-widgets-textline',
-                          uid + '#' + 'form.widgets.richtext'],
-                          ce.nodeIDs)
+        self.assertEqual(set([uid + '#' + 'form-widgets-title',
+                              uid + '#' + 'form-widgets-description',
+                              uid + '#' + 'form-widgets-rights',
+                              uid + '#' + 'form-widgets-textline',
+                              uid + '#' + 'form-widgets-text',
+                              uid + '#' + 'form.widgets.richtext']),
+                          set(ce.nodeIDs))
 
     def test_getNodeTextFromHtmlID(self):
         ce = ICollaborativelyEditable(self.doc)
