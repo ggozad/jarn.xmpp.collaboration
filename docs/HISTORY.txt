@@ -1,6 +1,9 @@
 Changelog
 =========
 
+0.1a3
+-----
+
 0.1a2 - 2010-06-06
 ------------------
 - Configure the component/server password and connection port in p.a.registry.
