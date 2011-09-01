@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '0.1a3-dev'
+version = '0.1a3'
 
 setup(name='jarn.xmpp.collaboration',
       version=version,
@@ -18,7 +18,7 @@ setup(name='jarn.xmpp.collaboration',
       keywords='',
       author='Yiorgis Gozadinos',
       author_email='ggozad@jarn.com',
-      url='http://svn.plone.org/svn/collective/',
+      url='https://github.com/ggozad/jarn.xmpp.collaboration',
       license='GPL',
       packages=find_packages(),
       namespace_packages=['jarn', 'jarn.xmpp'],
