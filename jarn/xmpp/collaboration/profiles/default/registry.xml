@@ -3,9 +3,9 @@
 
   <record name="jarn.xmpp.collaborationJID">
     <field type="plone.registry.field.ASCIILine">
-      <title>PubSub JID</title>
+      <title>Collaboration component JID</title>
     </field>
-    <value>collaboration.myserver</value>
+    <value>collaboration.localhost</value>
   </record>
 
   <record name="jarn.xmpp.collaborationPassword">

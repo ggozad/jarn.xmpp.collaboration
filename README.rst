@@ -14,13 +14,13 @@ It is part of a suite of packages aiming to provide XMPP services to Plone. The 
 
 Requirements
 ============
-Please see ``jarn.xmpp.core`` for details on setting up your Plone site and xmpp server. If you are not using the recipe included in `jarn.xmpp.buildout` you will need to configure your ejabberd to allow connections from the collaboration component. For ``ejabberd`` this is done by including the following in your config file::
+Please see ``jarn.xmpp.core`` for details on setting up your Plone site and XMPP server. If you are not using the recipe included in `jarn.xmpp.buildout` you will need to configure your ejabberd to allow connections from the collaboration component. For ``ejabberd`` this is done by including the following in your config file::
 
     {{5347, {0,0,0,0} }, ejabberd_service, [
       {access, all},
       {shaper_rule, fast},
       {ip, {127, 0, 0, 1}},
-      {hosts, ["collaboration.myserver", "collaboration.localhost"],
+      {hosts, ["collaboration.localhost"],
        [{password, "secret"}]
       }
      ]},
