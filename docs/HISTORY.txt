@@ -4,8 +4,12 @@ Changelog
 0.1a3
 -----
 
+- Simplified configuration and fixed confusing typos in the registry
+  [ggozad]
+
 0.1a2 - 2010-06-06
 ------------------
+
 - Configure the component/server password and connection port in p.a.registry.
   [ggozad]
 
