@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 import os
 
-version = '0.1a3'
+version = '0.1b1-dev'
 
 setup(name='jarn.xmpp.collaboration',
       version=version,
