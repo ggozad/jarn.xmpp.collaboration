@@ -216,13 +216,13 @@ jarnxmpp.ce = {
         $(msg).find('item').each(function () {
             var node = $(this).attr('node');
             var action = $(this).attr('action');
-            var node_id = jarnxmpp.ce.nodeToId[node];
-            var selector = jarnxmpp.ce._jqID(node_id);
             var patch_text = $(this).text();
-            var user_jid;
-
+            var node_id = ''
+            if (node!=='')
+                node_id = jarnxmpp.ce.nodeToId[node];
             if (action === 'patch') {
-                user_jid = $(this).attr('user');
+                var selector = jarnxmpp.ce._jqID(node_id);
+                var user_jid = $(this).attr('user');
                 var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                 var shadow = jarnxmpp.ce.shadow_copies[node];
                 var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
@@ -237,10 +237,11 @@ jarnxmpp.ce = {
                 jarnxmpp.ce.shadow_copies[node] = shadow;
                 jarnxmpp.ce._applyPatches(node_id, shadow, patches, user_jid);
             } else if (action === 'set') {
+                var selector = jarnxmpp.ce._jqID(node_id);
                 jarnxmpp.ce._setContent(node_id, patch_text);
                 jarnxmpp.ce.shadow_copies[node] = patch_text;
             } else if (action === 'focus') {
-                user_jid = $(this).attr('user');
+                var user_jid = $(this).attr('user');
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
             }
         });

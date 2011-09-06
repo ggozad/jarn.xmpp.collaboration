@@ -3,7 +3,8 @@ Changelog
 
 0.1b1
 -----
-
+- Fix js error when user has left collaborative editing.
+  [ggozad]
 
 0.1a3 - 2011-09-01
 ------------------
