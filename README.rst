@@ -34,6 +34,14 @@ The instance that is going to be running the xmpp component should include the `
           <include package="jarn.xmpp.collaboration" file="component.zcml" />
       </configure>
 
+Finally you will need to "activate" the product in the Plone control panel. After doing so, please edit the registry settings and in particular:
+
+* ``jarn.xmpp.collaborationJID`` is the Jabber id of the collaborative editing service component. Essentially if ``myserver`` is your XMPP domain ``collaboration.myserver`` is a good name. This should match the name you gave to ``ejabberd``, see above. Default is ``collaboration.localhost``.
+
+* ``jarn.xmpp.collaborationPassword`` is the password the component will use to connect to your xmpp server, see above. Default is ``secret``.
+
+* ``jarn.xmpp.collaborationPort`` is the port that your XMPP server allows components to connect to, see above. Default is ``5347``.
+
 Usage
 =====
 
