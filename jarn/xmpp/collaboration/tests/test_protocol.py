@@ -48,9 +48,45 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
             "<item action='set' node='test-node'>foo</item>" +
             "</x></message>", message.toXml())
 
+        # Another user joins:
+        xml = """<presence from='test2@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+
+        message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='test2@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='set' node='test-node'>foo</item>" +
+            "</x></message>", message.toXml())
+
+        # Then test@example.com leaves the node.
+
         xml = """<presence from='test@example.com' to='example.com'
                     type='unavailable'/>"""
         self.stub.send(parseXml(xml))
+
+        # Make sure the test@example.com is indeed gone,
+        self.assertEqual({u'test-node': set([u'test2@example.com'])},
+                         self.protocol.node_participants)
+        self.assertEqual({u'test2@example.com': set([u'test-node'])},
+                         self.protocol.participant_nodes)
+
+        # test2@example should have received a notification
+        message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='test2@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='user_left' node='test-node' user='test@example.com'/>" +
+            "</x></message>", message.toXml())
+
+        # Then test2@example.com leaves as well.
+        xml = """<presence from='test2@example.com' to='example.com'
+                    type='unavailable'/>"""
+        self.stub.send(parseXml(xml))
+
         self.assertEqual({}, self.protocol.node_participants)
         self.assertEqual({}, self.protocol.participant_nodes)
         self.assertEqual({}, self.protocol.shadow_copies)

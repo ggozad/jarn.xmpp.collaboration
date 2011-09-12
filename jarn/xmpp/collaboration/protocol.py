@@ -52,22 +52,15 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
+                    self._sendUserLeft(node, sender, self.node_participants[node])
                     self.userLeft(sender, node)
                     if not self.node_participants[node]:
                         del self.node_participants[node]
                         del self.shadow_copies[node]
                 del self.participant_nodes[sender]
-            if sender in self.participant_focus:
-                # Notify those that participate in the focused node that
-                # the user left. In principle, it is possible that there are
-                # other common nodes whose participants should also be
-                # informed but hey!
-                focus_node = self.participant_focus[sender]
-                if focus_node in self.node_participants:
-                    participants = self.node_participants[focus_node]
-                    self._sendFocus('', sender, participants)
-                del self.participant_focus[sender]
 
+            if sender in self.participant_focus:
+                del self.participant_focus[sender]
             return
 
         query = presence.query
@@ -153,6 +146,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         self.xmlstream.send(message)
 
     def _sendFocus(self, node, sender, recipients):
+        if not recipients:
+            return
         message = Element((None, "message", ))
         x = message.addElement((NS_CE, 'x'))
         item = x.addElement('item')
@@ -160,6 +155,19 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['node'] = node
         item['user'] = sender
 
+        for jid in recipients:
+            message['to'] = jid
+            self.xmlstream.send(message)
+
+    def _sendUserLeft(self, node, user, recipients):
+        if not recipients:
+            return
+        message = Element((None, "message", ))
+        x = message.addElement((NS_CE, 'x'))
+        item = x.addElement('item')
+        item['action'] = 'user_left'
+        item['user'] = user
+        item['node'] = node
 
         for jid in recipients:
             message['to'] = jid
