@@ -57,8 +57,7 @@ Initialization
 In order to initiate a collaborative editing session, the party sends a presence to the server indicating on which node he wishes to work on. The party MUST specify the `node` attribute in the `query` element::
 
     <presence from='foo@example.com/work' to='collaboration.example.com'>
-        <query xmlns='http://jarn.com/ns/collaborative-editing'
-            node='collab-node'/>
+        <query xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'/>
     </presence>
 
 Upon receipt the server sends a message to the party setting the initial text of the node. If the node is already being edited the initial text is the most current copy on the server::
@@ -68,6 +67,15 @@ Upon receipt the server sends a message to the party setting the initial text of
             <item action='set' node='collab-node'>Hello world</item>
         </x>
     </message>
+
+Additionally a message is sent to anyone else who might be editing the same node notifying them of the new participant::
+
+    <message from='collaboration.example.com' to='bar@example.com/home'>
+        <x xmlns='http://jarn.com/ns/collaborative-editing'>
+            <item action='user-joined' node='collab-node' user='foo@example.com/work'/>
+        </x>
+    </message>
+
 
 Editing cycle
 -------------
@@ -124,6 +132,14 @@ Termination
 The session is terminated when the party sends an `unavailable` presence::
 
     <presence from='foo@example.com/work' type='unavailable' />
+
+Upon receipt, the server notifies any party that might still be editing the node::
+
+    <message from='collaboration.example.com' to='bar@example.com/home'>
+        <x xmlns='http://jarn.com/ns/collaborative-editing'>
+            <item action='user-left' node='collab-node' user='foo@example.com/work'/>
+        </x>
+    </message>
 
 Credits
 =======
