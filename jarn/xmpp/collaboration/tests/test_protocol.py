@@ -68,7 +68,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual(
             "<message to='test@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='user_joined' node='test-node' user='test2@example.com'/>" +
+            "<item action='user-joined' node='test-node' user='test2@example.com'/>" +
             "</x></message>", message.toXml())
 
         # Then test@example.com leaves the node.
@@ -88,7 +88,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual(
             "<message to='test2@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='user_left' node='test-node' user='test@example.com'/>" +
+            "<item action='user-left' node='test-node' user='test@example.com'/>" +
             "</x></message>", message.toXml())
 
         # Then test2@example.com leaves as well.

@@ -4,6 +4,9 @@ Changelog
 0.1a4 - 2011-09-07
 ------------------
 
+- Notify user when others are joining/leaving the node.
+  [ggozad]
+
 - Documentation updates.
   [ggozad]
 

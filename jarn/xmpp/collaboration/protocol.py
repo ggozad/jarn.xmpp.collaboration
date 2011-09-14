@@ -52,7 +52,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
-                    self._sendNodeActionToRecipients('user_left', node, sender, self.node_participants[node])
+                    self._sendNodeActionToRecipients('user-left', node, sender, self.node_participants[node])
                     self.userLeft(sender, node)
                     if not self.node_participants[node]:
                         del self.node_participants[node]
@@ -86,8 +86,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             self.shadow_copies[node] = self.getNodeText(sender, node)
         self._sendShadowCopy(sender, node)
 
-        # Send user_joined and other participants focus
-        self._sendNodeActionToRecipients('user_joined', node, sender, self.node_participants[node] - set([sender]))
+        # Send user-joined and other participants focus
+        self._sendNodeActionToRecipients('user-joined', node, sender, self.node_participants[node] - set([sender]))
 
         for participant in (self.node_participants[node] - set([sender])):
             if participant in self.participant_focus and self.participant_focus[participant] == node:

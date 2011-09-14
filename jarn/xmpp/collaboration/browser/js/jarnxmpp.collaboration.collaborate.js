@@ -276,10 +276,10 @@ jarnxmpp.ce = {
             } else if (action === 'focus') {
                 var user_jid = $(this).attr('user');
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
-            } else if (action === 'user_joined') {
+            } else if (action === 'user-joined') {
                 var user_jid = $(this).attr('user');
                 jarnxmpp.ce._userJoined(user_jid);
-            } else if (action === 'user_left') {
+            } else if (action === 'user-left') {
                 var user_jid = $(this).attr('user');
                 jarnxmpp.ce._userLeft(user_jid);
             }
