@@ -8,7 +8,7 @@ from wokkel.subprotocols import XMPPHandler
 from jarn.xmpp.collaboration.interfaces import IDifferentialSyncronisation
 from jarn.xmpp.collaboration.dmp import diff_match_patch
 
-NS_CE= 'http://jarn.com/ns/collaborative-editing'
+NS_CE = 'http://jarn.com/ns/collaborative-editing'
 CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
@@ -52,7 +52,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
-                    self._sendUserLeft(node, sender, self.node_participants[node])
+                    self._sendNodeActionToRecipients('user_left', node, sender, self.node_participants[node])
                     self.userLeft(sender, node)
                     if not self.node_participants[node]:
                         del self.node_participants[node]
@@ -87,11 +87,11 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         self._sendShadowCopy(sender, node)
 
         # Send user_joined and other participants focus
-        self._sendUserJoined(node, sender, self.node_participants[node] - set([sender]))
+        self._sendNodeActionToRecipients('user_joined', node, sender, self.node_participants[node] - set([sender]))
 
         for participant in (self.node_participants[node] - set([sender])):
             if participant in self.participant_focus and self.participant_focus[participant] == node:
-                self._sendFocus(node, participant, [sender])
+                self._sendNodeActionToRecipients('focus', node, participant, [sender])
         self.userJoined(sender, node)
 
     def _onMessage(self, message):
@@ -108,7 +108,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             elif action=='focus' and node in self.shadow_copies:
                 self.participant_focus[sender] = node
                 recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
-                self._sendFocus(node, sender, recipients)
+                self._sendNodeActionToRecipients('focus', node, sender, recipients)
             elif action=='save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
@@ -147,43 +147,15 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         item['node'] = node
         self.xmlstream.send(message)
 
-    def _sendFocus(self, node, sender, recipients):
+    def _sendNodeActionToRecipients(self, action, node, sender, recipients):
         if not recipients:
             return
         message = Element((None, "message", ))
         x = message.addElement((NS_CE, 'x'))
         item = x.addElement('item')
-        item['action'] = 'focus'
+        item['action'] = action
         item['node'] = node
         item['user'] = sender
-
-        for jid in recipients:
-            message['to'] = jid
-            self.xmlstream.send(message)
-
-    def _sendUserJoined(self, node, user, recipients):
-        if not recipients:
-            return
-        message = Element((None, "message", ))
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item')
-        item['action'] = 'user_joined'
-        item['user'] = user
-        item['node'] = node
-
-        for jid in recipients:
-            message['to'] = jid
-            self.xmlstream.send(message)
-
-    def _sendUserLeft(self, node, user, recipients):
-        if not recipients:
-            return
-        message = Element((None, "message", ))
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item')
-        item['action'] = 'user_left'
-        item['user'] = user
-        item['node'] = node
 
         for jid in recipients:
             message['to'] = jid
