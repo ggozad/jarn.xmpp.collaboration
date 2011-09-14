@@ -84,7 +84,6 @@ jarnxmpp.ce = {
 
     _applyPatches: function (node_id, content, patches, user_jid) {
         var node = jarnxmpp.ce.idToNode[node_id];
-        var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(user_jid);
         var jqid = jarnxmpp.ce._jqID(node_id);
         if (jarnxmpp.ce.focused_node === node) {
             var caret_id = 'caret-' + Math.floor(Math.random()*100000);
@@ -130,14 +129,17 @@ jarnxmpp.ce = {
             // The field has no focus, just set the content
             jarnxmpp.ce._setContent(node_id, content);
         }
-        $('#' + participant_id).fadeTo('fast', 0.1);
-        $('#' + participant_id).fadeTo('fast', 1.0);
+        var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(user_jid);
+        participant_id = jarnxmpp.ce._jqID(participant_id);
+        $(participant_id).fadeTo('fast', 0.1);
+        $(participant_id).fadeTo('fast', 1.0);
     },
 
     _updateFocus: function(node_id, jid) {
         var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
-        var user_id = Strophe.getNodeFromJid(jid);
         $('#' + participant_id).remove();
+
+        var user_id = Strophe.getNodeFromJid(jid);
         if (node_id !=='') {
             jarnxmpp.Presence.getUserInfo(user_id, function(data) {
                 var participant_element = $('<img/>')
@@ -178,6 +180,10 @@ jarnxmpp.ce = {
         var user_id = Strophe.getNodeFromJid(jid);
         if (!(jid in jarnxmpp.ce.participants)) return;
         delete jarnxmpp.ce.participants[jid];
+        var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
+        participant_id = jarnxmpp.ce._jqID(participant_id);
+        $(participant_id).remove();
+
         jarnxmpp.Presence.getUserInfo(user_id, function(data) {
             $.gritter.add({
                 title: 'The user is no longer editing this document',
