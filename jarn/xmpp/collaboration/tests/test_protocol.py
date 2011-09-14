@@ -55,11 +55,20 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
                  </presence>"""
         self.stub.send(parseXml(xml))
 
-        message = self.stub.output[-1]
+        # He should also receive the shadow text
+        message = self.stub.output[-2]
         self.assertEqual(
             "<message to='test2@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
             "<item action='set' node='test-node'>foo</item>" +
+            "</x></message>", message.toXml())
+
+        #The already active user should receive a user-joined
+        message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='test@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='user_joined' node='test-node' user='test2@example.com'/>" +
             "</x></message>", message.toXml())
 
         # Then test@example.com leaves the node.
