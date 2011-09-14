@@ -6,6 +6,7 @@ jarnxmpp.ce = {
     last_update: {},
     tiny_ids: {},
     paused_nodes: {},
+    participants: {},
     focused_node: null,
 
     _setup: function() {
@@ -157,6 +158,38 @@ jarnxmpp.ce = {
         return Strophe.getNodeFromJid(jid) + Strophe.getResourceFromJid(jid);
     },
 
+    _userJoined: function(jid) {
+        var user_id = Strophe.getNodeFromJid(jid);
+        if (jid in jarnxmpp.ce.participants) return;
+        jarnxmpp.ce.participants[jid] = ''
+        jarnxmpp.Presence.getUserInfo(user_id, function(data) {
+            $.gritter.add({
+                title: 'Also editing this document',
+                text: data.fullname,
+                image: data.portrait_url,
+                sticky: false,
+                time: 3000,
+            });
+
+        });
+    },
+
+    _userLeft: function(jid) {
+        var user_id = Strophe.getNodeFromJid(jid);
+        if (!(jid in jarnxmpp.ce.participants)) return;
+        delete jarnxmpp.ce.participants[jid];
+        jarnxmpp.Presence.getUserInfo(user_id, function(data) {
+            $.gritter.add({
+                title: 'The user is no longer editing this document',
+                text: data.fullname,
+                image: data.portrait_url,
+                sticky: false,
+                time: 3000,
+            });
+
+        });
+    },
+
     nodeChanged: function (node_id) {
         if (node_id in jarnxmpp.ce.paused_nodes) return;
         var now = new Date().getTime();
@@ -243,7 +276,14 @@ jarnxmpp.ce = {
             } else if (action === 'focus') {
                 var user_jid = $(this).attr('user');
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
+            } else if (action === 'user_joined') {
+                var user_jid = $(this).attr('user');
+                jarnxmpp.ce._userJoined(user_jid);
+            } else if (action === 'user_left') {
+                var user_jid = $(this).attr('user');
+                jarnxmpp.ce._userLeft(user_jid);
             }
+
         });
         return true;
     },
