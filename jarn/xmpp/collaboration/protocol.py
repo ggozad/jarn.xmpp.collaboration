@@ -1,6 +1,8 @@
 import logging
 
+from twisted.words.protocols.jabber.xmlstream import IQ, toResponse
 from twisted.words.xish.domish import Element
+from zExceptions import BadRequest
 from zope.interface import implements
 from wokkel import disco, iwokkel
 from wokkel.subprotocols import XMPPHandler
@@ -9,7 +11,7 @@ from jarn.xmpp.collaboration.interfaces import IDifferentialSyncronisation
 from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE = 'http://jarn.com/ns/collaborative-editing'
-CE_IQ_GET = '/iq[@type="get"]/query[@xmlns="' + NS_CE + '"]'
+IQ_GET = '/iq[@type="get"]'
 CE_IQ_SET = '/iq[@type="set"]/query[@xmlns="' + NS_CE + '"]'
 CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
@@ -40,15 +42,13 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
-        self.xmlstream.addObserver(CE_IQ_GET, self._onIQGetRequest)
+        self.xmlstream.addObserver(IQ_GET + '/shadowcopy[@xmlns="' + NS_CE + '"]',
+                                   self._onGetShadowCopyIQ)
         self.xmlstream.addObserver(CE_IQ_SET, self._onIQSetRequest)
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
 
         logger.info('Collaboration component connected.')
-
-    def _onIQGetRequest(self, iq):
-        pass
 
     def _onIQSetRequest(self, iq):
         pass
@@ -79,6 +79,14 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             # Ignore, malformed initial presence
             return
 
+        try:
+            text = self.getNodeText(sender, node)
+        except BadRequest: # Unauthorized access
+            return
+
+        if node not in self.shadow_copies:
+            self.shadow_copies[node] = text
+
         if node in self.node_participants:
             self.node_participants[node].add(sender)
         else:
@@ -89,10 +97,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         else:
             self.participant_nodes[sender] = set([node])
 
-        # Send shadow copy text.
-        if node not in self.shadow_copies:
-            self.shadow_copies[node] = self.getNodeText(sender, node)
-        self._sendShadowCopy(sender, node)
 
         # Send user-joined and other participants focus
         self._sendNodeActionToRecipients('user-joined', node, sender, self.node_participants[node] - set([sender]))
@@ -120,6 +124,22 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             elif action == 'save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
+    def _onGetShadowCopyIQ(self, iq):
+        node = iq.shadowcopy['node']
+        sender = iq['from']
+        try:
+            if node not in self.node_participants or \
+                sender not in self.node_participants[node]:
+                raise BadRequest("Not properly authorized")
+            response = toResponse(iq, u'result')
+            sc = response.addElement((NS_CE, u'shadowcopy'), content=self.shadow_copies[node])
+            sc['node'] = node
+        except BadRequest, reason:
+            response = toResponse(iq, u'error')
+            response.addElement((NS_CE, u'error'), content=reason.message)
+        finally:
+            self.xmlstream.send(response)
+
     def _handlePatch(self, node, sender, diff):
         patches = self.dmp.patch_fromText(diff)
         shadow = self.shadow_copies[node]
@@ -144,16 +164,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         for jid in (self.node_participants[node] - set([sender])):
             message['to'] = jid
             self.xmlstream.send(message)
-
-    def _sendShadowCopy(self, jid, node):
-        text = self.shadow_copies[node]
-        message = Element((None, "message", ))
-        message['to'] = jid
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item', content=text)
-        item['action'] = 'set'
-        item['node'] = node
-        self.xmlstream.send(message)
 
     def _sendNodeActionToRecipients(self, action, node, sender, recipients):
         if not recipients:

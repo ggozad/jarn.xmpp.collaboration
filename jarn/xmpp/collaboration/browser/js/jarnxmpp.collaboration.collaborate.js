@@ -62,6 +62,23 @@ jarnxmpp.ce = {
             });
         }
         $(jqid).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants'));
+        jarnxmpp.ce._getShadowCopy(node);
+    },
+
+    _getShadowCopy: function(node) {
+        var sc_iq = $iq({type: 'get', to: jarnxmpp.ce.component})
+            .c('shadowcopy', {xmlns: jarnxmpp.ce.NS, node: node});
+        jarnxmpp.connection.sendIQ(sc_iq,
+            function(response) {
+                var node_id = jarnxmpp.ce.nodeToId[node];
+                var selector = jarnxmpp.ce._jqID(node_id);
+                var text = $(response).find(">:first-child").text();
+                jarnxmpp.ce._setContent(node_id, text);
+                jarnxmpp.ce.shadow_copies[node] = text;
+            },
+            function(error) {
+               console.log(error);
+            });
     },
 
     _getContent: function (node_id) {
@@ -163,7 +180,7 @@ jarnxmpp.ce = {
     _userJoined: function(jid) {
         var user_id = Strophe.getNodeFromJid(jid);
         if (jid in jarnxmpp.ce.participants) return;
-        jarnxmpp.ce.participants[jid] = ''
+        jarnxmpp.ce.participants[jid] = '';
         jarnxmpp.Presence.getUserInfo(user_id, function(data) {
             $.gritter.add({
                 title: 'Also editing this document',
@@ -256,12 +273,10 @@ jarnxmpp.ce = {
             var node = $(this).attr('node');
             var action = $(this).attr('action');
             var patch_text = $(this).text();
-            var node_id = ''
-            if (node!=='')
-                node_id = jarnxmpp.ce.nodeToId[node];
+            var user_jid = $(this).attr('user');
+            var node_id = jarnxmpp.ce.nodeToId[node];
             if (action === 'patch') {
                 var selector = jarnxmpp.ce._jqID(node_id);
-                var user_jid = $(this).attr('user');
                 var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
                 var shadow = jarnxmpp.ce.shadow_copies[node];
                 var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
@@ -275,18 +290,11 @@ jarnxmpp.ce = {
                 // Set shadow
                 jarnxmpp.ce.shadow_copies[node] = shadow;
                 jarnxmpp.ce._applyPatches(node_id, shadow, patches, user_jid);
-            } else if (action === 'set') {
-                var selector = jarnxmpp.ce._jqID(node_id);
-                jarnxmpp.ce._setContent(node_id, patch_text);
-                jarnxmpp.ce.shadow_copies[node] = patch_text;
             } else if (action === 'focus') {
-                var user_jid = $(this).attr('user');
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
             } else if (action === 'user-joined') {
-                var user_jid = $(this).attr('user');
                 jarnxmpp.ce._userJoined(user_jid);
             } else if (action === 'user-left') {
-                var user_jid = $(this).attr('user');
                 jarnxmpp.ce._userLeft(user_jid);
             }
 
