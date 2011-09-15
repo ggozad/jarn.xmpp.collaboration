@@ -9,10 +9,12 @@ from jarn.xmpp.collaboration.interfaces import IDifferentialSyncronisation
 from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE = 'http://jarn.com/ns/collaborative-editing'
+CE_IQ_GET = '/iq[@type="get"]/query[@xmlns="' + NS_CE + '"]'
+CE_IQ_SET = '/iq[@type="set"]/query[@xmlns="' + NS_CE + '"]'
 CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
-logger= logging.getLogger('jarn.xmpp.collaboration')
+logger = logging.getLogger('jarn.xmpp.collaboration')
 
 
 class DifferentialSyncronisationClientProtocol(XMPPHandler):
@@ -38,17 +40,23 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
+        self.xmlstream.addObserver(CE_IQ_GET, self._onIQGetRequest)
+        self.xmlstream.addObserver(CE_IQ_SET, self._onIQSetRequest)
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
+
         logger.info('Collaboration component connected.')
 
-    def _onIQRequest(self, iq):
+    def _onIQGetRequest(self, iq):
+        pass
+
+    def _onIQSetRequest(self, iq):
         pass
 
     def _onPresence(self, presence):
         sender = presence['from']
         type = presence.getAttribute('type')
-        if type=='unavailable':
+        if type == 'unavailable':
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
@@ -102,14 +110,14 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         for elem in x.elements():
             node = elem['node']
             action = elem['action']
-            if action=='patch' and node in self.shadow_copies:
+            if action == 'patch' and node in self.shadow_copies:
                 diff = elem.children[0]
                 self._handlePatch(node, sender, diff)
-            elif action=='focus' and node in self.shadow_copies:
+            elif action == 'focus' and node in self.shadow_copies:
                 self.participant_focus[sender] = node
                 recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
                 self._sendNodeActionToRecipients('focus', node, sender, recipients)
-            elif action=='save' and node in self.shadow_copies:
+            elif action == 'save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
     def _handlePatch(self, node, sender, diff):
@@ -123,7 +131,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
         else:
-            logger.info('Patch from %s applied on %s'%(sender, node))
+            logger.info('Patch from %s applied on %s' % (sender, node))
         self.shadow_copies[node] = new_text
 
         message = Element((None, "message", ))
