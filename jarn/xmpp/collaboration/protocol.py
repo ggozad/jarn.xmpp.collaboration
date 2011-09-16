@@ -1,8 +1,8 @@
 import logging
 
-from twisted.words.protocols.jabber.xmlstream import IQ, toResponse
+from twisted.words.protocols.jabber.xmlstream import IQ
+from twisted.words.protocols.jabber.xmlstream import toResponse
 from twisted.words.xish.domish import Element
-from zExceptions import BadRequest
 from zope.interface import implements
 from wokkel import disco, iwokkel
 from wokkel.subprotocols import XMPPHandler
@@ -17,6 +17,10 @@ CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
 logger = logging.getLogger('jarn.xmpp.collaboration')
+
+
+class DSCException(Exception):
+    pass
 
 
 class DifferentialSyncronisationClientProtocol(XMPPHandler):
@@ -81,7 +85,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
 
         try:
             text = self.getNodeText(sender, node)
-        except BadRequest: # Unauthorized access
+        except DSCException:  # Unauthorized access
             return
 
         if node not in self.shadow_copies:
@@ -96,7 +100,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             self.participant_nodes[sender].add(node)
         else:
             self.participant_nodes[sender] = set([node])
-
 
         # Send user-joined and other participants focus
         self._sendNodeActionToRecipients('user-joined', node, sender, self.node_participants[node] - set([sender]))
@@ -130,11 +133,11 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         try:
             if node not in self.node_participants or \
                 sender not in self.node_participants[node]:
-                raise BadRequest("Unauthorized")
+                raise DSCException("Unauthorized")
             response = toResponse(iq, u'result')
             sc = response.addElement((NS_CE, u'shadowcopy'), content=self.shadow_copies[node])
             sc['node'] = node
-        except BadRequest, reason:
+        except DSCException, reason:
             response = toResponse(iq, u'error')
             response.addElement((NS_CE, u'error'), content=reason.message)
         finally:
