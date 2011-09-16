@@ -43,6 +43,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         self.participant_focus = {}
         self.shadow_copies = {}
         self.dmp = diff_match_patch()
+        self.pending_deferreds = set()
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
@@ -143,6 +144,30 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         finally:
             self.xmlstream.send(response)
 
+    def _sendPatchIQ(self, node, sender, receiver, patch):
+        def success(result, self):
+            self.pending_deferreds.remove((node, receiver,))
+
+        def failure(reason, self):
+            self.pending_deferreds.remove((node, receiver,))
+            logger.info("User %s failed on patching node %s" % (sender, node))
+
+        # XXX If (node, sender,) in self.pending_deferreds, send later!
+
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = receiver
+        patch = iq.addElement((NS_CE, 'patch'), content=patch)
+        patch['node'] = node
+        patch['user'] = sender
+        self.pending_deferreds.add((node, receiver,))
+        d = iq.send()
+        d.addCallback(success, self)
+        d.addErrback(failure, self)
+        return d
+
+    def _onPatchIQ(self, iq):
+        pass
+
     def _handlePatch(self, node, sender, diff):
         patches = self.dmp.patch_fromText(diff)
         shadow = self.shadow_copies[node]
@@ -157,16 +182,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             logger.info('Patch from %s applied on %s' % (sender, node))
         self.shadow_copies[node] = new_text
 
-        message = Element((None, "message", ))
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item', content=diff)
-        item['action'] = 'patch'
-        item['node'] = node
-        item['user'] = sender
-
-        for jid in (self.node_participants[node] - set([sender])):
-            message['to'] = jid
-            self.xmlstream.send(message)
+        for receiver in (self.node_participants[node] - set([sender])):
+            self._sendPatchIQ(node, sender, receiver, diff )
 
     def _sendNodeActionToRecipients(self, action, node, sender, recipients):
         if not recipients:

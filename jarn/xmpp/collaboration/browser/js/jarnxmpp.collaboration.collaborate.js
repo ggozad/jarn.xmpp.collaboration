@@ -21,6 +21,7 @@ jarnxmpp.ce = {
             jarnxmpp.ce.dmp.Match_Threshold=0.5;
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
             jarnxmpp.connection.addHandler(jarnxmpp.ce.messageReceived, null, 'message', null, null, jarnxmpp.ce.component);
+            jarnxmpp.connection.addHandler(jarnxmpp.ce.onPatchIQSet, jarnxmpp.ce.NS, 'iq', 'set', null, jarnxmpp.ce.component);
 
             // Setup up nodes.
             for (var key in jarnxmpp.ce.nodeToId)
@@ -213,6 +214,44 @@ jarnxmpp.ce = {
         });
     },
 
+    onPatchIQSet: function (iq) {
+        var iq_id = $(iq).attr('id');
+        $(iq).find('>patch:first').each(function () {
+            var node = $(this).attr('node');
+            var node_id = jarnxmpp.ce.nodeToId[node];
+            var patch_text = $(this).text();
+            var user_jid = $(this).attr('user');
+            var selector = jarnxmpp.ce._jqID(node_id);
+            var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
+            var shadow = jarnxmpp.ce.shadow_copies[node];
+            var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
+            shadow = patch_applications[0];
+            var results = patch_applications[1];
+            $.each(results, function (index, value) {
+                if (value!==true) {
+                    var response = $iq({type: 'error', to: jarnxmpp.ce.component, id: iq_id})
+                        .c('error', {xmlns: jarnxmpp.ce.NS});
+                    jarnxmpp.connection.send(response);
+                    $.gritter.add({
+                        title: 'Error',
+                        text: 'An error occured, resetting text...',
+                        sticky: false,
+                        time: 3000,
+                    });
+                    jarnxmpp.ce._getShadowCopy(node);
+                    return true;
+                }
+            });
+            // Set shadow
+            jarnxmpp.ce.shadow_copies[node] = shadow;
+            jarnxmpp.ce._applyPatches(node_id, shadow, patches, user_jid);
+            var response = $iq({type: 'result', to: jarnxmpp.ce.component, id: iq_id})
+                .c('success', {xmlns: jarnxmpp.ce.NS});
+            jarnxmpp.connection.send(response);
+        });
+        return true;
+    },
+
     nodeChanged: function (node_id) {
         if (node_id in jarnxmpp.ce.paused_nodes) return;
         var now = new Date().getTime();
@@ -275,22 +314,7 @@ jarnxmpp.ce = {
             var patch_text = $(this).text();
             var user_jid = $(this).attr('user');
             var node_id = jarnxmpp.ce.nodeToId[node];
-            if (action === 'patch') {
-                var selector = jarnxmpp.ce._jqID(node_id);
-                var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
-                var shadow = jarnxmpp.ce.shadow_copies[node];
-                var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
-                shadow = patch_applications[0];
-                var results = patch_applications[1];
-                $.each(results, function (index, value) {
-                    // XXX: Do something about it!
-                    if (value!==true)
-                        alert('Failure at applying patch:' + index + 'of '+results.length);
-                });
-                // Set shadow
-                jarnxmpp.ce.shadow_copies[node] = shadow;
-                jarnxmpp.ce._applyPatches(node_id, shadow, patches, user_jid);
-            } else if (action === 'focus') {
+            if (action === 'focus') {
                 jarnxmpp.ce._updateFocus(node_id, user_jid);
             } else if (action === 'user-joined') {
                 jarnxmpp.ce._userJoined(user_jid);
