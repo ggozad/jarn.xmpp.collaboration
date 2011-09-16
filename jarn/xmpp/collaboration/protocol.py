@@ -12,7 +12,7 @@ from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE = 'http://jarn.com/ns/collaborative-editing'
 IQ_GET = '/iq[@type="get"]'
-CE_IQ_SET = '/iq[@type="set"]/query[@xmlns="' + NS_CE + '"]'
+IQ_SET = '/iq[@type="set"]'
 CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
@@ -43,20 +43,17 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         self.participant_focus = {}
         self.shadow_copies = {}
         self.dmp = diff_match_patch()
-        self.pending_deferreds = set()
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
         self.xmlstream.addObserver(IQ_GET + '/shadowcopy[@xmlns="' + NS_CE + '"]',
                                    self._onGetShadowCopyIQ)
-        self.xmlstream.addObserver(CE_IQ_SET, self._onIQSetRequest)
+        self.xmlstream.addObserver(IQ_SET + '/patch[@xmlns="' + NS_CE + '"]', self._onPatchIQ)
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
 
         logger.info('Collaboration component connected.')
 
-    def _onIQSetRequest(self, iq):
-        pass
 
     def _onPresence(self, presence):
         sender = presence['from']
@@ -118,10 +115,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         for elem in x.elements():
             node = elem['node']
             action = elem['action']
-            if action == 'patch' and node in self.shadow_copies:
-                diff = elem.children[0]
-                self._handlePatch(node, sender, diff)
-            elif action == 'focus' and node in self.shadow_copies:
+            if action == 'focus' and node in self.shadow_copies:
                 self.participant_focus[sender] = node
                 recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
                 self._sendNodeActionToRecipients('focus', node, sender, recipients)
@@ -144,46 +138,46 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         finally:
             self.xmlstream.send(response)
 
+    def _onPatchIQ(self, iq):
+        node = iq.patch['node']
+        sender = iq['from']
+        diff = iq.patch.children[0]
+        patches = self.dmp.patch_fromText(diff)
+        shadow = self.shadow_copies[node]
+
+        (new_text, res) = self.dmp.patch_apply(patches, shadow)
+        if False in res:
+            response = toResponse(iq, u'error')
+            response.addElement((NS_CE, u'error'), content='Error applying patch.')
+            self.xmlstream.send(response)
+            logger.error('Patch %s could not be applied on node %s' % \
+                         (diff, node))
+            return
+
+        response = toResponse(iq, u'result')
+        response.addElement((NS_CE, u'success',))
+        self.xmlstream.send(response)
+        self.shadow_copies[node] = new_text
+        for receiver in (self.node_participants[node] - set([sender])):
+            self._sendPatchIQ(node, sender, receiver, diff )
+        logger.info('Patch from %s applied on %s' % (sender, node))
+
     def _sendPatchIQ(self, node, sender, receiver, patch):
         def success(result, self):
-            self.pending_deferreds.remove((node, receiver,))
+            pass
 
         def failure(reason, self):
-            self.pending_deferreds.remove((node, receiver,))
             logger.info("User %s failed on patching node %s" % (sender, node))
-
-        # XXX If (node, sender,) in self.pending_deferreds, send later!
 
         iq = IQ(self.xmlstream, 'set')
         iq['to'] = receiver
         patch = iq.addElement((NS_CE, 'patch'), content=patch)
         patch['node'] = node
         patch['user'] = sender
-        self.pending_deferreds.add((node, receiver,))
         d = iq.send()
         d.addCallback(success, self)
         d.addErrback(failure, self)
         return d
-
-    def _onPatchIQ(self, iq):
-        pass
-
-    def _handlePatch(self, node, sender, diff):
-        patches = self.dmp.patch_fromText(diff)
-        shadow = self.shadow_copies[node]
-
-        (new_text, res) = self.dmp.patch_apply(patches, shadow)
-        if False in res:
-            # Do I need to do something or not?
-            # Maybe revert the patch?
-            logger.error('Patch %s could not be applied on node %s' % \
-                         (diff, node))
-        else:
-            logger.info('Patch from %s applied on %s' % (sender, node))
-        self.shadow_copies[node] = new_text
-
-        for receiver in (self.node_participants[node] - set([sender])):
-            self._sendPatchIQ(node, sender, receiver, diff )
 
     def _sendNodeActionToRecipients(self, action, node, sender, recipients):
         if not recipients:

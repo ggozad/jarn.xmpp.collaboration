@@ -21,7 +21,7 @@ jarnxmpp.ce = {
             jarnxmpp.ce.dmp.Match_Threshold=0.5;
             jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
             jarnxmpp.connection.addHandler(jarnxmpp.ce.messageReceived, null, 'message', null, null, jarnxmpp.ce.component);
-            jarnxmpp.connection.addHandler(jarnxmpp.ce.onPatchIQSet, jarnxmpp.ce.NS, 'iq', 'set', null, jarnxmpp.ce.component);
+            jarnxmpp.connection.addHandler(jarnxmpp.ce.onPatchIQ, jarnxmpp.ce.NS, 'iq', 'set', null, jarnxmpp.ce.component);
 
             // Setup up nodes.
             for (var key in jarnxmpp.ce.nodeToId)
@@ -214,7 +214,7 @@ jarnxmpp.ce = {
         });
     },
 
-    onPatchIQSet: function (iq) {
+    onPatchIQ: function (iq) {
         var iq_id = $(iq).attr('id');
         $(iq).find('>patch:first').each(function () {
             var node = $(this).attr('node');
@@ -298,12 +298,13 @@ jarnxmpp.ce = {
         var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
         jarnxmpp.ce.shadow_copies[node] = current;
 
-        var message = $msg({to: jarnxmpp.ce.component})
-            .c('x', {xmlns: jarnxmpp.ce.NS})
-            .c('item', {node: node, action: 'patch'}).t(patch_text);
-
-        jarnxmpp.connection.send(message);
-
+        var iq = $iq({type: 'set', to: jarnxmpp.ce.component})
+            .c('patch', {xmlns: jarnxmpp.ce.NS, node: node}, patch_text);
+        jarnxmpp.connection.sendIQ(iq,
+            function (response) {},
+            function(error) {
+               console.log(error);
+            });
         return false;
     },
 
