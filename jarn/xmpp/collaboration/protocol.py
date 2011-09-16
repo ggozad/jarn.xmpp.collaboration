@@ -130,7 +130,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         try:
             if node not in self.node_participants or \
                 sender not in self.node_participants[node]:
-                raise BadRequest("Not properly authorized")
+                raise BadRequest("Unauthorized")
             response = toResponse(iq, u'result')
             sc = response.addElement((NS_CE, u'shadowcopy'), content=self.shadow_copies[node])
             sc['node'] = node

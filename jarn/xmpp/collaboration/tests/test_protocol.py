@@ -23,11 +23,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.protocol.connectionInitialized()
 
     def test_onPresence(self):
-        """
-        Upon receiving a presence, the protocol MUST set itself up,
-        as well as send the initial text to the user. When the user leaves
-        there's more bookkeeping.
-        """
+        # User test@example.com joins
         self.protocol.mock_text['test-node'] = 'foo'
         xml = """<presence from='test@example.com' to='example.com'>
                     <query xmlns='http://jarn.com/ns/collaborative-editing'
@@ -41,27 +37,12 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual({u'test-node': 'foo'},
                          self.protocol.shadow_copies)
 
-        message = self.stub.output[-1]
-        self.assertEqual(
-            "<message to='test@example.com'>" +
-            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='set' node='test-node'>foo</item>" +
-            "</x></message>", message.toXml())
-
         # Another user joins:
         xml = """<presence from='test2@example.com' to='example.com'>
                     <query xmlns='http://jarn.com/ns/collaborative-editing'
                            node='test-node'/>
                  </presence>"""
         self.stub.send(parseXml(xml))
-
-        # He should also receive the shadow text
-        message = self.stub.output[-2]
-        self.assertEqual(
-            "<message to='test2@example.com'>" +
-            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='set' node='test-node'>foo</item>" +
-            "</x></message>", message.toXml())
 
         #The already active user should receive a user-joined
         message = self.stub.output[-1]
@@ -99,6 +80,49 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual({}, self.protocol.node_participants)
         self.assertEqual({}, self.protocol.participant_nodes)
         self.assertEqual({}, self.protocol.shadow_copies)
+
+    def test_getShadowCopyIQ(self):
+        # User test@example.com joins
+        self.protocol.mock_text['test-node'] = 'foo'
+        xml = """<presence from='test@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+
+        # And requests the shadow copy of 'test-node'
+        xml = """<iq from='test@example.com' to='example.com' type='get'>
+                    <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test@example.com' from='example.com' type='result'>" +
+                         "<shadowcopy xmlns='http://jarn.com/ns/collaborative-editing' node='test-node'>foo</shadowcopy>" +
+                         "</iq>", response.toXml())
+
+        # Requesting the shadow copy of an non-existent node should result in Unauthorized error
+        xml = """<iq from='test@example.com' to='example.com' type='get'>
+                    <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='unknown-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test@example.com' from='example.com' type='error'>" +
+                         "<error xmlns='http://jarn.com/ns/collaborative-editing'>Unauthorized</error></iq>",
+                         response.toXml())
+
+        # User test2@example.com who has not sent a presence to the component should not be able
+        # to retrieve the text.
+        xml = """<iq from='test2@example.com' to='example.com' type='get'>
+                 <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test2@example.com' from='example.com' type='error'>" +
+                         "<error xmlns='http://jarn.com/ns/collaborative-editing'>Unauthorized</error></iq>",
+                         response.toXml())
 
     def test_onPatch(self):
         # 'foo' is the initial text. foo and bar present.
