@@ -101,8 +101,8 @@ class DifferentialSyncronisationHandler(XMPPHandler):
 
         # Send user-joined and other participants focus
         self._sendNodeActionToRecipients('user-joined', node, sender, self.node_participants[node] - set([sender]))
-
         for participant in (self.node_participants[node] - set([sender])):
+            self._sendNodeActionToRecipients('user-joined', node, participant, [sender])
             if participant in self.participant_focus and self.participant_focus[participant] == node:
                 self._sendNodeActionToRecipients('focus', node, participant, [sender])
         self.userJoined(sender, node)
