@@ -10,6 +10,11 @@ Changelog
   conventions.
   [ggozad]
 
+- Reorganized and cleaned js code. The client protocol implementation is now
+  separate from the plone-specific parts allowing code reuse and improving
+  readability.
+  [ggozad]
+
 - Notify user when others are joining/leaving the node.
   [ggozad]
 
