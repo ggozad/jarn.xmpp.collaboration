@@ -4,6 +4,12 @@ Changelog
 0.1a4 - 2011-09-07
 ------------------
 
+- Major protocol update. Instead of sending message stanzas around, now iq
+  stanzas are used. This makes it possible to check for errors and synchronize
+  in certain edge cases. It also makes the protocol more in line with XMPP
+  conventions.
+  [ggozad]
+
 - Notify user when others are joining/leaving the node.
   [ggozad]
 

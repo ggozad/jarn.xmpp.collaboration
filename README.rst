@@ -54,21 +54,13 @@ Protocol specification.
 
 Initialization
 --------------
-In order to initiate a collaborative editing session, the party sends a presence to the server indicating on which node he wishes to work on. The party MUST specify the `node` attribute in the `query` element::
+In order to initiate a collaborative editing session, the party sends a ``presence`` stanza to the server component indicating on which node he wishes to work on. The party MUST specify the `node` attribute in the ``query`` element::
 
     <presence from='foo@example.com/work' to='collaboration.example.com'>
         <query xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'/>
     </presence>
 
-Upon receipt the server sends a message to the party setting the initial text of the node. If the node is already being edited the initial text is the most current copy on the server::
-
-    <message from='collaboration.example.com' to='foo@example.com/work'>
-        <x xmlns='http://jarn.com/ns/collaborative-editing'>
-            <item action='set' node='collab-node'>Hello world</item>
-        </x>
-    </message>
-
-Additionally a message is sent to anyone else who might be editing the same node notifying them of the new participant::
+Upon receipt a ``message`` stanza is sent to anyone else who might be editing the same node notifying them of the new participant::
 
     <message from='collaboration.example.com' to='bar@example.com/home'>
         <x xmlns='http://jarn.com/ns/collaborative-editing'>
@@ -76,26 +68,67 @@ Additionally a message is sent to anyone else who might be editing the same node
         </x>
     </message>
 
+The newly joined user also receives a similar notification about existing users ::
+
+    <message from='collaboration.example.com' to='foo@example.com/home'>
+        <x xmlns='http://jarn.com/ns/collaborative-editing'>
+            <item action='user-joined' node='collab-node' user='bar@example.com/work'/>
+        </x>
+    </message>
+
+To complete the initialization the new party MUST request the current version of the node from the server::
+
+    <iq id='123' from='foo@example.com/work' to='collaboration.example.com' type='get'>
+        <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'/>
+    </iq>
+
+To which the server replies providing his current copy of the text::
+
+    <iq id='123' from='collaboration.example.com' to='foo@example.com/work'  type='result'>
+         <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'>Hello world</shadowcopy>
+     </iq>
+
+In case the node does not exist, or the user has no privileges granting him access, the server MUST reply with an error, for instance::
+
+    <iq id='123' from='collaboration.example.com' to='foo@example.com/work' type='error'>
+        <error xmlns='http://jarn.com/ns/collaborative-editing'>Unauthorized</error>
+    </iq>
+
 
 Editing cycle
 -------------
-When a party edits the text, it notifies the server by sending a message. The message contains one or more `item` elements which MUST specify the `node` they apply to, have the attribute `action` set to `patch`, and in their body contain the patch created by the Diff-Match-Patch algorithm in text format. For instance if the text changed from "`Hello world`" to "`Hello world, have a nice day!`" the message would be::
+When a party edits the text, it notifies the server by sending an ``iq`` stanza of type ``set``. The stanza contains one ``patch`` element which MUST specify the `node` they apply to, and in their body contain the patch created by the Diff-Match-Patch algorithm in text format. For instance if the text changed from "`Hello world`" to "`Hello world, have a nice day!`" the message would be::
 
-    <message from='foo@example.com/work' to='collaboration.example.com'>
-        <x xmlns='http://jarn.com/ns/collaborative-editing'>
-            <item node='collab-node' action='patch'>@@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n</item>
-        </x>
-    </message>
+    <iq id='234' from='foo@example.com/work' to='collaboration.example.com' type='set'>
+        <patch xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'>
+            @@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n
+        </patch>
+    </iq>
 
-If the server succeeds to apply the patch to its shadow copy, it broadcasts the patch to all other parties who are present on the node. The parties  MUST apply it to their text::
+If the server succeeds to apply the patch to its shadow copy, it replies with a `success` result::
 
-    <message from='collaboration.example.com' to='bar@example.com/home'>
-        <x xmlns='http://jarn.com/ns/collaborative-editing'>
-            <item node='collab-node' action='patch'>@@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n</item>
-        </x>
-    </message>
+    <iq id='234' from='collaboration.example.com' to='foo@example.com/work' type='result'>
+        <success xmlns='http://jarn.com/ns/collaborative-editing'/>
+    </iq>
 
-If the server fails to apply the patch (because for instance there was a network problem and the client fell out of sync, or the diff-match-patch application failed), it SHOULD send a ``set`` action to the party with its shadow copy as text.
+Additionally the server MUST broadcast the patch to all other parties who are present on the node::
+
+    <iq id='345' from='collaboration.example.com' to='bar@example.com/home' type='set'>
+        <patch xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'>
+            @@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n
+        </patch>
+    </iq>
+
+The parties  MUST apply it to their text and if they succeeded as above.
+If applying the patch fails, the server (or client) MUST reply with an ``iq`` stanza of type `error`. For instance if a patch was sent to the server and for some reason it was not possible to apply it to the shadow copy, the server would reply::
+
+    <iq id='234' from='collaboration.example.com' to='foo@example.com/work' type='error'>
+        <error xmlns='http://jarn.com/ns/collaborative-editing'>
+            Patch @@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n could not be applied.
+        </error>
+    </iq>
+
+In that case the client SHOULD sync again the current copy by sending an ``iq`` stanza of type `get`requesting the shadow copy, see the `Initialization` section above.
 
 Focusing
 --------
