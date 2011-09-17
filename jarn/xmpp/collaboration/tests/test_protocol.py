@@ -23,11 +23,7 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.protocol.connectionInitialized()
 
     def test_onPresence(self):
-        """
-        Upon receiving a presence, the protocol MUST set itself up,
-        as well as send the initial text to the user. When the user leaves
-        there's more bookkeeping.
-        """
+        # User test@example.com joins
         self.protocol.mock_text['test-node'] = 'foo'
         xml = """<presence from='test@example.com' to='example.com'>
                     <query xmlns='http://jarn.com/ns/collaborative-editing'
@@ -41,13 +37,6 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual({u'test-node': 'foo'},
                          self.protocol.shadow_copies)
 
-        message = self.stub.output[-1]
-        self.assertEqual(
-            "<message to='test@example.com'>" +
-            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='set' node='test-node'>foo</item>" +
-            "</x></message>", message.toXml())
-
         # Another user joins:
         xml = """<presence from='test2@example.com' to='example.com'>
                     <query xmlns='http://jarn.com/ns/collaborative-editing'
@@ -55,16 +44,16 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
                  </presence>"""
         self.stub.send(parseXml(xml))
 
-        # He should also receive the shadow text
-        message = self.stub.output[-2]
+        # The new user should receive a user-joined for the existing user.
+        message = self.stub.output[-1]
         self.assertEqual(
             "<message to='test2@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='set' node='test-node'>foo</item>" +
+            "<item action='user-joined' node='test-node' user='test@example.com'/>" +
             "</x></message>", message.toXml())
 
         #The already active user should receive a user-joined
-        message = self.stub.output[-1]
+        message = self.stub.output[-2]
         self.assertEqual(
             "<message to='test@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
@@ -100,6 +89,49 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.assertEqual({}, self.protocol.participant_nodes)
         self.assertEqual({}, self.protocol.shadow_copies)
 
+    def test_getShadowCopyIQ(self):
+        # User test@example.com joins
+        self.protocol.mock_text['test-node'] = 'foo'
+        xml = """<presence from='test@example.com' to='example.com'>
+                    <query xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </presence>"""
+        self.stub.send(parseXml(xml))
+
+        # And requests the shadow copy of 'test-node'
+        xml = """<iq from='test@example.com' to='example.com' type='get'>
+                    <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test@example.com' from='example.com' type='result'>" +
+                         "<shadowcopy xmlns='http://jarn.com/ns/collaborative-editing' node='test-node'>foo</shadowcopy>" +
+                         "</iq>", response.toXml())
+
+        # Requesting the shadow copy of an non-existent node should result in Unauthorized error
+        xml = """<iq from='test@example.com' to='example.com' type='get'>
+                    <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='unknown-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test@example.com' from='example.com' type='error'>" +
+                         "<error xmlns='http://jarn.com/ns/collaborative-editing'>Unauthorized</error></iq>",
+                         response.toXml())
+
+        # User test2@example.com who has not sent a presence to the component should not be able
+        # to retrieve the text.
+        xml = """<iq from='test2@example.com' to='example.com' type='get'>
+                 <shadowcopy xmlns='http://jarn.com/ns/collaborative-editing'
+                           node='test-node'/>
+                 </iq>"""
+        self.stub.send(parseXml(xml))
+        response = self.stub.output[-1]
+        self.assertEqual("<iq to='test2@example.com' from='example.com' type='error'>" +
+                         "<error xmlns='http://jarn.com/ns/collaborative-editing'>Unauthorized</error></iq>",
+                         response.toXml())
+
     def test_onPatch(self):
         # 'foo' is the initial text. foo and bar present.
         self.protocol.mock_text['test-node'] = 'foo'
@@ -115,21 +147,26 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.stub.send(parseXml(xml))
 
         # bar sends a patch changing the text to 'foobar'.
-        xml = """<message from='bar@example.com' to='example.com'>
-                    <x xmlns='http://jarn.com/ns/collaborative-editing'>
-                        <item node='test-node' action='patch'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>
-                    </x>
-                </message>"""
+        xml = """<iq from='bar@example.com' to='example.com' id='id_1' type='set'>
+                    <patch xmlns='http://jarn.com/ns/collaborative-editing'
+                        node='test-node'>@@ -1,3 +1,6 @@\n foo\n+bar\n</patch>
+                </iq>"""
         self.stub.send(parseXml(xml))
 
-        # foo receives the same patch.
-        message = self.stub.output[-1]
+        # He should have received a 'success' reply
+        response = self.stub.output[-2]
         self.assertEqual(
-            "<message to='foo@example.com'>" +
-            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='patch' node='test-node' user='bar@example.com'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>" +
-            "</x></message>",
-            message.toXml())
+            "<iq to='bar@example.com' from='example.com' id='id_1' type='result'>" +
+            "<success xmlns='http://jarn.com/ns/collaborative-editing'/></iq>", 
+            response.toXml())
+
+        # foo receives the same patch.
+        iq = self.stub.output[-1]
+        self.assertEqual(
+            "<iq to='foo@example.com' type='set' id='H_0'>" +
+            "<patch xmlns='http://jarn.com/ns/collaborative-editing' " +
+            "node='test-node' user='bar@example.com'>@@ -1,3 +1,6 @@\n foo\n+bar\n</patch></iq>",
+            iq.toXml())
 
         # The shadow copy is 'foobar'
         self.assertEqual(u'foobar', self.protocol.shadow_copies['test-node'])

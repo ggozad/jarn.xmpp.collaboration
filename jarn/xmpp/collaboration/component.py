@@ -7,7 +7,6 @@ from AccessControl.SecurityManagement import noSecurityManager
 from Products.CMFCore.utils import getToolByName
 from plone.registry.interfaces import IRegistry
 from twisted.words.protocols.jabber.jid import JID
-from zExceptions import BadRequest
 from zope.app.component.hooks import setSite
 from zope.component import getGlobalSiteManager
 from zope.component import getUtility
@@ -18,6 +17,7 @@ from jarn.xmpp.twisted.component import XMPPComponent
 from jarn.xmpp.collaboration.interfaces import ICollaborativeEditingComponent
 from jarn.xmpp.collaboration.interfaces import ICollaborativelyEditable
 from jarn.xmpp.collaboration.protocol import DifferentialSyncronisationHandler
+from jarn.xmpp.collaboration.protocol import DSCException
 
 logger= logging.getLogger('jarn.xmpp.collaboration')
 
@@ -44,21 +44,21 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
             try:
                 portal = app.unrestrictedTraverse(self.portal_id, None)
                 if portal is None:
-                    raise BadRequest(
+                    raise DSCException(
                         'Portal with id %s not found' % self.portal_id)
                 setSite(portal)
                 acl_users = getToolByName(portal, 'acl_users')
                 user_id = JID(jid).user
                 user = acl_users.getUserById(user_id)
                 if user is None:
-                    raise BadRequest(
+                    raise DSCException(
                         'Invalid user %s' % user_id)
                 newSecurityManager(None, user)
                 ct = getToolByName(portal, 'portal_catalog')
                 uid, html_id = node.split('#')
                 item = ct.unrestrictedSearchResults(UID=uid)
                 if not item:
-                    raise BadRequest(
+                    raise DSCException(
                         'Content with UID %s not found' % uid)
                 item = ICollaborativelyEditable(item[0].getObject())
                 text = item.getNodeTextFromHtmlID(html_id)
@@ -79,21 +79,21 @@ class CollaborationHandler(DifferentialSyncronisationHandler):
             try:
                 portal = app.unrestrictedTraverse(self.portal_id, None)
                 if portal is None:
-                    raise BadRequest(
+                    raise DSCException(
                         'Portal with id %s not found' % self.portal_id)
                 setSite(portal)
                 acl_users = getToolByName(portal, 'acl_users')
                 user_id = JID(jid).user
                 user = acl_users.getUserById(user_id)
                 if user is None:
-                    raise BadRequest(
+                    raise DSCException(
                         'Invalid user %s' % user_id)
                 newSecurityManager(None, user)
                 ct = getToolByName(portal, 'portal_catalog')
                 uid, html_id = node.split('#')
                 item = ct.unrestrictedSearchResults(UID=uid)
                 if not item:
-                    raise BadRequest(
+                    raise DSCException(
                         'Content with UID %s not found' % uid)
                 item = ICollaborativelyEditable(item[0].getObject())
                 item.setNodeTextFromHtmlID(html_id, text)

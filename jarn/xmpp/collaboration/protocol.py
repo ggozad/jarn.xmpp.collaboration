@@ -1,5 +1,7 @@
 import logging
 
+from twisted.words.protocols.jabber.xmlstream import IQ
+from twisted.words.protocols.jabber.xmlstream import toResponse
 from twisted.words.xish.domish import Element
 from zope.interface import implements
 from wokkel import disco, iwokkel
@@ -9,10 +11,16 @@ from jarn.xmpp.collaboration.interfaces import IDifferentialSyncronisation
 from jarn.xmpp.collaboration.dmp import diff_match_patch
 
 NS_CE = 'http://jarn.com/ns/collaborative-editing'
+IQ_GET = '/iq[@type="get"]'
+IQ_SET = '/iq[@type="set"]'
 CE_PRESENCE = "/presence"
 CE_MESSAGE = "/message/x[@xmlns='%s']" % NS_CE
 
-logger= logging.getLogger('jarn.xmpp.collaboration')
+logger = logging.getLogger('jarn.xmpp.collaboration')
+
+
+class DSCException(Exception):
+    pass
 
 
 class DifferentialSyncronisationClientProtocol(XMPPHandler):
@@ -38,17 +46,19 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
+        self.xmlstream.addObserver(IQ_GET + '/shadowcopy[@xmlns="' + NS_CE + '"]',
+                                   self._onGetShadowCopyIQ)
+        self.xmlstream.addObserver(IQ_SET + '/patch[@xmlns="' + NS_CE + '"]', self._onPatchIQ)
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
+
         logger.info('Collaboration component connected.')
 
-    def _onIQRequest(self, iq):
-        pass
 
     def _onPresence(self, presence):
         sender = presence['from']
         type = presence.getAttribute('type')
-        if type=='unavailable':
+        if type == 'unavailable':
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
@@ -71,6 +81,14 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             # Ignore, malformed initial presence
             return
 
+        try:
+            text = self.getNodeText(sender, node)
+        except DSCException:  # Unauthorized access
+            return
+
+        if node not in self.shadow_copies:
+            self.shadow_copies[node] = text
+
         if node in self.node_participants:
             self.node_participants[node].add(sender)
         else:
@@ -81,15 +99,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         else:
             self.participant_nodes[sender] = set([node])
 
-        # Send shadow copy text.
-        if node not in self.shadow_copies:
-            self.shadow_copies[node] = self.getNodeText(sender, node)
-        self._sendShadowCopy(sender, node)
-
         # Send user-joined and other participants focus
         self._sendNodeActionToRecipients('user-joined', node, sender, self.node_participants[node] - set([sender]))
-
         for participant in (self.node_participants[node] - set([sender])):
+            self._sendNodeActionToRecipients('user-joined', node, participant, [sender])
             if participant in self.participant_focus and self.participant_focus[participant] == node:
                 self._sendNodeActionToRecipients('focus', node, participant, [sender])
         self.userJoined(sender, node)
@@ -102,50 +115,69 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         for elem in x.elements():
             node = elem['node']
             action = elem['action']
-            if action=='patch' and node in self.shadow_copies:
-                diff = elem.children[0]
-                self._handlePatch(node, sender, diff)
-            elif action=='focus' and node in self.shadow_copies:
+            if action == 'focus' and node in self.shadow_copies:
                 self.participant_focus[sender] = node
                 recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
                 self._sendNodeActionToRecipients('focus', node, sender, recipients)
-            elif action=='save' and node in self.shadow_copies:
+            elif action == 'save' and node in self.shadow_copies:
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
-    def _handlePatch(self, node, sender, diff):
+    def _onGetShadowCopyIQ(self, iq):
+        node = iq.shadowcopy['node']
+        sender = iq['from']
+        try:
+            if node not in self.node_participants or \
+                sender not in self.node_participants[node]:
+                raise DSCException("Unauthorized")
+            response = toResponse(iq, u'result')
+            sc = response.addElement((NS_CE, u'shadowcopy'), content=self.shadow_copies[node])
+            sc['node'] = node
+        except DSCException, reason:
+            response = toResponse(iq, u'error')
+            response.addElement((NS_CE, u'error'), content=reason.message)
+        finally:
+            self.xmlstream.send(response)
+
+    def _onPatchIQ(self, iq):
+        node = iq.patch['node']
+        sender = iq['from']
+        diff = iq.patch.children[0]
         patches = self.dmp.patch_fromText(diff)
         shadow = self.shadow_copies[node]
 
         (new_text, res) = self.dmp.patch_apply(patches, shadow)
         if False in res:
-            # Do I need to do something or not?
-            # Maybe revert the patch?
+            response = toResponse(iq, u'error')
+            response.addElement((NS_CE, u'error'), content='Error applying patch.')
+            self.xmlstream.send(response)
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
-        else:
-            logger.info('Patch from %s applied on %s'%(sender, node))
+            return
+
+        response = toResponse(iq, u'result')
+        response.addElement((NS_CE, u'success',))
+        self.xmlstream.send(response)
         self.shadow_copies[node] = new_text
+        for receiver in (self.node_participants[node] - set([sender])):
+            self._sendPatchIQ(node, sender, receiver, diff )
+        logger.info('Patch from %s applied on %s' % (sender, node))
 
-        message = Element((None, "message", ))
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item', content=diff)
-        item['action'] = 'patch'
-        item['node'] = node
-        item['user'] = sender
+    def _sendPatchIQ(self, node, sender, receiver, patch):
+        def success(result, self):
+            pass
 
-        for jid in (self.node_participants[node] - set([sender])):
-            message['to'] = jid
-            self.xmlstream.send(message)
+        def failure(reason, self):
+            logger.info("User %s failed on patching node %s" % (sender, node))
 
-    def _sendShadowCopy(self, jid, node):
-        text = self.shadow_copies[node]
-        message = Element((None, "message", ))
-        message['to'] = jid
-        x = message.addElement((NS_CE, 'x'))
-        item = x.addElement('item', content=text)
-        item['action'] = 'set'
-        item['node'] = node
-        self.xmlstream.send(message)
+        iq = IQ(self.xmlstream, 'set')
+        iq['to'] = receiver
+        patch = iq.addElement((NS_CE, 'patch'), content=patch)
+        patch['node'] = node
+        patch['user'] = sender
+        d = iq.send()
+        d.addCallback(success, self)
+        d.addErrback(failure, self)
+        return d
 
     def _sendNodeActionToRecipients(self, action, node, sender, recipients):
         if not recipients:
