@@ -44,8 +44,16 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
                  </presence>"""
         self.stub.send(parseXml(xml))
 
-        #The already active user should receive a user-joined
+        # The new user should receive a user-joined for the existing user.
         message = self.stub.output[-1]
+        self.assertEqual(
+            "<message to='test2@example.com'>" +
+            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
+            "<item action='user-joined' node='test-node' user='test@example.com'/>" +
+            "</x></message>", message.toXml())
+
+        #The already active user should receive a user-joined
+        message = self.stub.output[-2]
         self.assertEqual(
             "<message to='test@example.com'>" +
             "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
@@ -139,21 +147,26 @@ class DifferentialSyncronisationHandlerTest(unittest.TestCase):
         self.stub.send(parseXml(xml))
 
         # bar sends a patch changing the text to 'foobar'.
-        xml = """<message from='bar@example.com' to='example.com'>
-                    <x xmlns='http://jarn.com/ns/collaborative-editing'>
-                        <item node='test-node' action='patch'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>
-                    </x>
-                </message>"""
+        xml = """<iq from='bar@example.com' to='example.com' id='id_1' type='set'>
+                    <patch xmlns='http://jarn.com/ns/collaborative-editing'
+                        node='test-node'>@@ -1,3 +1,6 @@\n foo\n+bar\n</patch>
+                </iq>"""
         self.stub.send(parseXml(xml))
 
-        # foo receives the same patch.
-        message = self.stub.output[-1]
+        # He should have received a 'success' reply
+        response = self.stub.output[-2]
         self.assertEqual(
-            "<message to='foo@example.com'>" +
-            "<x xmlns='http://jarn.com/ns/collaborative-editing'>" +
-            "<item action='patch' node='test-node' user='bar@example.com'>@@ -1,3 +1,6 @@\n foo\n+bar\n</item>" +
-            "</x></message>",
-            message.toXml())
+            "<iq to='bar@example.com' from='example.com' id='id_1' type='result'>" +
+            "<success xmlns='http://jarn.com/ns/collaborative-editing'/></iq>", 
+            response.toXml())
+
+        # foo receives the same patch.
+        iq = self.stub.output[-1]
+        self.assertEqual(
+            "<iq to='foo@example.com' type='set' id='H_0'>" +
+            "<patch xmlns='http://jarn.com/ns/collaborative-editing' " +
+            "node='test-node' user='bar@example.com'>@@ -1,3 +1,6 @@\n foo\n+bar\n</patch></iq>",
+            iq.toXml())
 
         # The shadow copy is 'foobar'
         self.assertEqual(u'foobar', self.protocol.shadow_copies['test-node'])
