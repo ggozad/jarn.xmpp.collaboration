@@ -106,7 +106,10 @@ jarnxmpp.ce.sendPatch = function (event) {
     jarnxmpp.connection.sendIQ(iq,
         function (response) {},
         function(error) {
-           console.log(error);
+            var event = $.Event('jarnxmpp.ce.error');
+            event.text = 'Error applying patch. Resetting text...';
+            $(document).trigger(event);
+            jarnxmpp.ce.getShadowCopy(node);
         });
     return false;
 };
