@@ -2,5 +2,6 @@
  <javascript id="++resource++jarn.xmpp.collaboration.js/jquery.ba-dotimeout.min.js" authenticated="True" insert-after="jquery.js" compression="none"/>
  <javascript id="++resource++jarn.xmpp.collaboration.js/jquery.field_selection.js" authenticated="True" insert-after="jquery.js" />
  <javascript id="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js" authenticated="True" insert-after="++resource++jarn.xmpp.core.js/jarnxmpp.core.ui.js" compression="none"/>
- <javascript id="++resource++jarn.xmpp.collaboration.js/jarnxmpp.collaboration.collaborate.js" authenticated="True" insert-after="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js"/>
+ <javascript id="++resource++jarn.xmpp.collaboration.js/jarnxmpp.collaboration.protocol.js" authenticated="True" insert-after="++resource++jarn.xmpp.collaboration.js/diff_match_patch.js"/>
+ <javascript id="++resource++jarn.xmpp.collaboration.js/jarnxmpp.collaboration.collaborate.js" authenticated="True" insert-after="++resource++jarn.xmpp.collaboration.js/jarnxmpp.collaboration.protocol.js"/>
 </object>
