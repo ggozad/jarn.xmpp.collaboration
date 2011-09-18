@@ -1,7 +1,7 @@
 Changelog
 =========
 
-0.1a4 - 2011-09-07
+0.1b1 - 2011-09-18
 ------------------
 
 - Major protocol update. Instead of sending message stanzas around, now iq
@@ -17,6 +17,9 @@ Changelog
 
 - Notify user when others are joining/leaving the node.
   [ggozad]
+
+0.1a4 - 2011-09-07
+------------------
 
 - Documentation updates.
   [ggozad]
