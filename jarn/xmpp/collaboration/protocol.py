@@ -115,11 +115,14 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         for elem in x.elements():
             node = elem['node']
             action = elem['action']
-            if action == 'focus' and node in self.shadow_copies:
+            if node not in self.shadow_copies:
+                # Ignore, probably a delayed message.
+                return
+            if action == 'focus':
                 self.participant_focus[sender] = node
                 recipients = [jid for jid in (self.node_participants[node] - set([sender]))]
                 self._sendNodeActionToRecipients('focus', node, sender, recipients)
-            elif action == 'save' and node in self.shadow_copies:
+            elif action == 'save':
                 self.setNodeText(sender, node, self.shadow_copies[node])
 
     def _onGetShadowCopyIQ(self, iq):
