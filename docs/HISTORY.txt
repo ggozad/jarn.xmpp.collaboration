@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.1b2 - Unreleased
+------------------
+
+- Send patch from Strophe as CDATA.
+  [ggozad]
+
 0.1b1 - 2011-09-18
 ------------------
 
