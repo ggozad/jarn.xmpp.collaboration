@@ -1,3 +1,4 @@
+import hashlib
 import logging
 
 from twisted.words.protocols.jabber.xmlstream import IQ
@@ -46,8 +47,12 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         super(DifferentialSyncronisationHandler, self).__init__()
 
     def connectionInitialized(self):
-        self.xmlstream.addObserver(IQ_GET + '/shadowcopy[@xmlns="' + NS_CE + '"]',
-                                   self._onGetShadowCopyIQ)
+        self.xmlstream.addObserver(
+            IQ_GET + '/shadowcopy[@xmlns="' + NS_CE + '"]',
+            self._onGetShadowCopyIQ)
+        self.xmlstream.addObserver(
+            IQ_GET + '/checksum[@xmlns="' + NS_CE + '"]',
+            self._onGetChecksum)
         self.xmlstream.addObserver(IQ_SET + '/patch[@xmlns="' + NS_CE + '"]', self._onPatchIQ)
         self.xmlstream.addObserver(CE_PRESENCE, self._onPresence)
         self.xmlstream.addObserver(CE_MESSAGE, self._onMessage)
@@ -141,6 +146,28 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         finally:
             self.xmlstream.send(response)
 
+    def _onGetChecksum(self, iq):
+        node = iq.checksum['node']
+        sender = iq['from']
+        digest = iq.checksum['digest']
+        response = None
+        try:
+            if node not in self.node_participants or \
+                sender not in self.node_participants[node]:
+                raise DSCException("Unauthorized")
+            md5= hashlib.md5(self.shadow_copies[node].encode('utf-8'))
+            shadow_digest = md5.hexdigest()
+            response = toResponse(iq, u'result')
+            if digest==shadow_digest:
+                response.addElement((NS_CE, u'match'))
+            else:
+                response.addElement((NS_CE, u'mismatch'))
+        except DSCException, reason:
+            response = toResponse(iq, u'error')
+            response.addElement((NS_CE, u'error'), content=reason.message)
+        finally:
+            self.xmlstream.send(response)
+
     def _onPatchIQ(self, iq):
         node = iq.patch['node']
         sender = iq['from']
@@ -156,11 +183,20 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
             return
+        self.shadow_copies[node] = new_text
+        digest = None
+        if iq.patch.hasAttribute('digest'):
+            digest = iq.patch['digest']
+            md5 = hashlib.md5()
+            md5.update(self.shadow_copies[node].encode('utf-8'))
+            shadow_digest = md5.hexdigest()
+            logger.info("SHADOW %s" % shadow_digest)
+            logger.info("CLIENT %s" % digest)
+            logger.info('MD5: %s' % shadow_digest == digest)
 
         response = toResponse(iq, u'result')
         response.addElement((NS_CE, u'success',))
         self.xmlstream.send(response)
-        self.shadow_copies[node] = new_text
         for receiver in (self.node_participants[node] - set([sender])):
             self._sendPatchIQ(node, sender, receiver, diff )
         logger.info('Patch from %s applied on %s' % (sender, node))

@@ -100,8 +100,10 @@ jarnxmpp.ce.sendPatch = function (event) {
     var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
     var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[node] = current;
+    var digest = MD5.hexdigest(current);
     var iq = $iq({type: 'set', to: jarnxmpp.ce.component})
-        .c('patch', {xmlns: jarnxmpp.ce.NS, node: node}).t(patch_text);
+        .c('patch', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest})
+        .t(patch_text);
     jarnxmpp.connection.sendIQ(iq,
         function (response) {},
         function(error) {
@@ -111,6 +113,20 @@ jarnxmpp.ce.sendPatch = function (event) {
             jarnxmpp.ce.getShadowCopy(node);
         });
     return false;
+};
+
+jarnxmpp.ce.checkDigest = function (node) {
+    var shadow =  jarnxmpp.ce.shadow_copies[node];
+    var digest = MD5.hexdigest(shadow);
+    var iq = $iq({type: 'get', to: jarnxmpp.ce.component})
+        .c('checksum', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest});
+    jarnxmpp.connection.sendIQ(iq,
+        function (response) {
+            console.log(response);
+        },
+        function(error) {
+            console.log(error);
+        });
 };
 
 jarnxmpp.ce.sendNodeFocus = function(node, user) {

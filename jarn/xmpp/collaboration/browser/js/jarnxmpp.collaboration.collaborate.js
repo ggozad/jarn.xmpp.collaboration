@@ -259,6 +259,7 @@ jarnxmpp.ce._setupNode = function (node) {
     }
     $(jqid).before($('<div>').attr('id', node_id + '-participants').addClass('node-participants'));
     jarnxmpp.ce.getShadowCopy(node);
+    jarnxmpp.ce.checkDigest(node);
 };
 
 $(document).bind('jarnxmpp.connected', function () {
