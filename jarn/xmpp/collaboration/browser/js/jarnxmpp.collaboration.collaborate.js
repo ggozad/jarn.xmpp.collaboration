@@ -45,8 +45,8 @@ jarnxmpp.ce.nodeBlur = function (node_id) {
     if (node_id in jarnxmpp.ce.paused_nodes) return;
     var now = new Date().getTime();
     var node = jarnxmpp.ce.idToNode[node_id];
-    if ((now-jarnxmpp.ce.last_update[node]) < 500.0) {
-        $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 500, function() {
+    if ((now-jarnxmpp.ce.last_update[node]) < 1000.0) {
+        $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 1000, function() {
             now = new Date().getTime();
             jarnxmpp.ce.last_update[node] = now;
             var event = $.Event('jarnxmpp.ce.nodeChanged');
