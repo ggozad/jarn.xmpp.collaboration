@@ -100,10 +100,8 @@ jarnxmpp.ce.sendPatch = function (event) {
     var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
     var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[node] = current;
-    var cdata = Strophe.xmlGenerator().createCDATASection(patch_text);
     var iq = $iq({type: 'set', to: jarnxmpp.ce.component})
-        .c('patch', {xmlns: jarnxmpp.ce.NS, node: node})
-        .cnode(cdata);
+        .c('patch', {xmlns: jarnxmpp.ce.NS, node: node}).t(patch_text);
     jarnxmpp.connection.sendIQ(iq,
         function (response) {},
         function(error) {
