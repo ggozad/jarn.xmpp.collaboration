@@ -194,10 +194,19 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             md5.update(self.shadow_copies[node].encode('utf-8'))
             shadow_digest = md5.hexdigest()
             if shadow_digest!=digest:
-                # XXX
-                # This needs handling.
-                logger.error('MD5 digest did not match.')
-
+                # There is a mismatch in the node's digest.
+                # Presumably, this happens because the sender has not yet
+                # received a previous patch. If that is the case and since
+                # we already applied let him continue, otherwise return an
+                # and let him get the shadow copy.
+                if node not in self.pending_patches or sender not in self.pending_patches[node]:
+                    response = toResponse(iq, u'error')
+                    response.addElement((NS_CE, u'error'), content='Error applying patch.')
+                    self.xmlstream.send(response)
+                    logger.info('MD5 digest did not match.')
+                    return
+                else:
+                    logger.info('MD5 digest did not match. Continue as normal, this is probably due to lag.')
         response = toResponse(iq, u'result')
         response.addElement((NS_CE, u'success',))
         self.xmlstream.send(response)
