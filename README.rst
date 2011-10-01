@@ -100,7 +100,7 @@ Editing cycle
 When a party edits the text, it notifies the server by sending an ``iq`` stanza of type ``set``. The stanza contains one ``patch`` element which MUST specify the `node` they apply to, and in their body contain the patch created by the Diff-Match-Patch algorithm in text format. For instance if the text changed from "`Hello world`" to "`Hello world, have a nice day!`" the message would be::
 
     <iq id='234' from='foo@example.com/work' to='collaboration.example.com' type='set'>
-        <patch xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node'>
+        <patch xmlns='http://jarn.com/ns/collaborative-editing' node='collab-node' digest='b9e8241b3cc82c43af870641078ee03f'>
             @@ -4,8 +4,26 @@\n lo world\n+, have a nice day!\n
         </patch>
     </iq>
@@ -119,7 +119,7 @@ Additionally the server MUST broadcast the patch to all other parties who are pr
         </patch>
     </iq>
 
-The parties  MUST apply it to their text and if they succeeded as above.
+The parties  MUST apply it to their text.
 If applying the patch fails, the server (or client) MUST reply with an ``iq`` stanza of type `error`. For instance if a patch was sent to the server and for some reason it was not possible to apply it to the shadow copy, the server would reply::
 
     <iq id='234' from='collaboration.example.com' to='foo@example.com/work' type='error'>
@@ -129,6 +129,8 @@ If applying the patch fails, the server (or client) MUST reply with an ``iq`` st
     </iq>
 
 In that case the client SHOULD sync again the current copy by sending an ``iq`` stanza of type `get`requesting the shadow copy, see the `Initialization` section above.
+
+Finally, a ``patch`` element MAY have the ``digest`` attribute. In that case, the server SHOULD check the checksum and if there is a mismatch, reply with an error stanza if appropriate. Note that currently the checksum algorithm is not negotiated and is assumed to be MD5 hex digest.
 
 Focusing
 --------
