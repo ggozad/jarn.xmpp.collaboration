@@ -201,9 +201,9 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                 # and let him get the shadow copy.
                 if node not in self.pending_patches or sender not in self.pending_patches[node]:
                     response = toResponse(iq, u'error')
-                    response.addElement((NS_CE, u'error'), content='Error applying patch.')
+                    response.addElement((NS_CE, u'error'), content='Digest mismatch.')
                     self.xmlstream.send(response)
-                    logger.info('MD5 digest did not match.')
+                    logger.error('MD5 digest did not match on node %s' % node)
                     return
                 else:
                     logger.info('MD5 digest did not match. Continue as normal, this is probably due to lag.')
