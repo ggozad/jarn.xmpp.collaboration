@@ -1,10 +1,14 @@
 Changelog
 =========
 
-0.1b2 - Unreleased
+0.1b2 - 2011-10-01
 ------------------
 
-- Send patch from Strophe as CDATA.
+- Perform checksum checks on every patch. Deal with potential errors due to
+  network lag.
+  [ggozad]
+
+- Use TinyMCE's raw instead of processed text. Improved reliability.
   [ggozad]
 
 0.1b1 - 2011-09-18
