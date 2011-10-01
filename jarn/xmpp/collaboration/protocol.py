@@ -43,6 +43,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         self.participant_nodes = {}
         self.participant_focus = {}
         self.shadow_copies = {}
+        self.pending_patches = {}
         self.dmp = diff_match_patch()
         super(DifferentialSyncronisationHandler, self).__init__()
 
@@ -59,7 +60,6 @@ class DifferentialSyncronisationHandler(XMPPHandler):
 
         logger.info('Collaboration component connected.')
 
-
     def _onPresence(self, presence):
         sender = presence['from']
         type = presence.getAttribute('type')
@@ -67,6 +67,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             if sender in self.participant_nodes:
                 for node in self.participant_nodes[sender]:
                     self.node_participants[node].remove(sender)
+                    if node in self.pending_patches and sender in self.pending_patches[node]:
+                        self.pending_patches[node].remove(sender)
+                        if not self.pending_patches[node]:
+                            del self.pending_patches[node]
                     self._sendNodeActionToRecipients('user-left', node, sender, self.node_participants[node])
                     self.userLeft(sender, node)
                     if not self.node_participants[node]:
@@ -197,14 +201,16 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         response.addElement((NS_CE, u'success',))
         self.xmlstream.send(response)
         for receiver in (self.node_participants[node] - set([sender])):
-            self._sendPatchIQ(node, sender, receiver, diff )
+            self._sendPatchIQ(node, sender, receiver, diff)
         logger.info('Patch from %s applied on %s' % (sender, node))
 
     def _sendPatchIQ(self, node, sender, receiver, patch):
+
         def success(result, self):
-            pass
+            self.pending_patches[node].remove(receiver)
 
         def failure(reason, self):
+            self.pending_patches[node].remove(receiver)
             logger.info("User %s failed on patching node %s" % (sender, node))
 
         iq = IQ(self.xmlstream, 'set')
@@ -212,6 +218,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
         patch = iq.addElement((NS_CE, 'patch'), content=patch)
         patch['node'] = node
         patch['user'] = sender
+        if node in self.pending_patches:
+            self.pending_patches[node].append(receiver)
+        else:
+            self.pending_patches[node] = [receiver]
         d = iq.send()
         d.addCallback(success, self)
         d.addErrback(failure, self)
