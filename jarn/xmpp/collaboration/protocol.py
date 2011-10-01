@@ -184,15 +184,14 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                          (diff, node))
             return
         self.shadow_copies[node] = new_text
-        digest = None
-        if iq.patch.hasAttribute('digest'):
-            digest = iq.patch['digest']
-            md5 = hashlib.md5()
-            md5.update(self.shadow_copies[node].encode('utf-8'))
-            shadow_digest = md5.hexdigest()
-            logger.info("SHADOW %s" % shadow_digest)
-            logger.info("CLIENT %s" % digest)
-            logger.info('MD5: %s' % shadow_digest == digest)
+        digest = iq.patch['digest']
+        md5 = hashlib.md5()
+        md5.update(self.shadow_copies[node].encode('utf-8'))
+        shadow_digest = md5.hexdigest()
+        if shadow_digest!=digest:
+            # XXX
+            # This needs handling.
+            logger.error('MD5 digest did not match.')
 
         response = toResponse(iq, u'result')
         response.addElement((NS_CE, u'success',))

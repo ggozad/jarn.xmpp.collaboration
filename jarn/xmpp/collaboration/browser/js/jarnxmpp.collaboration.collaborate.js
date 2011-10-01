@@ -87,7 +87,7 @@ jarnxmpp.ce.onApplyPatch = function (event) {
             editor.selection.setContent(caret_element);
             // Maybe this will do for IE instead of the above? Need to test
             //editor.execCommand('mceInsertContent', false, caret_element);
-            bookmark_content = editor.getContent();
+            bookmark_content = jarnxmpp.ce._getContent(node);
             content = jarnxmpp.ce.dmp.patch_apply(patches, bookmark_content)[0];
             editor.setContent(content);
 

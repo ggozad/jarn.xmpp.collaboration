@@ -6,6 +6,11 @@ jarnxmpp.ce.dmp.Match_Threshold=0.5;
 jarnxmpp.ce.dmp.Patch_DeleteThreshold=0.5;
 jarnxmpp.ce.shadow_copies = {};
 
+jarnxmpp.ce.getDigest = function(text) {
+    // Convert to utf-8 and return the hexdigest
+    return MD5.hexdigest(unescape( encodeURIComponent(text)));
+};
+
 jarnxmpp.ce.msgReceived = function (msg) {
     $(msg).find('item').each(function () {
         var node = $(this).attr('node');
@@ -100,7 +105,7 @@ jarnxmpp.ce.sendPatch = function (event) {
     var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
     var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[node] = current;
-    var digest = MD5.hexdigest(current);
+    var digest = jarnxmpp.ce.getDigest(current);
     var iq = $iq({type: 'set', to: jarnxmpp.ce.component})
         .c('patch', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest})
         .t(patch_text);
@@ -117,7 +122,7 @@ jarnxmpp.ce.sendPatch = function (event) {
 
 jarnxmpp.ce.checkDigest = function (node) {
     var shadow =  jarnxmpp.ce.shadow_copies[node];
-    var digest = MD5.hexdigest(shadow);
+    var digest = jarnxmpp.ce.getDigest(shadow);
     var iq = $iq({type: 'get', to: jarnxmpp.ce.component})
         .c('checksum', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest});
     jarnxmpp.connection.sendIQ(iq,
