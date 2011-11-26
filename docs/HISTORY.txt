@@ -1,8 +1,12 @@
 Changelog
 =========
 
-0.1b3 - Unreleased
+0.1 - Unreleased
 ------------------
+
+- Fix checksum bug preventing the shadow text to be applied if an error ever
+  occured.
+  [ggozad]
 
 0.1b2 - 2011-10-01
 ------------------
