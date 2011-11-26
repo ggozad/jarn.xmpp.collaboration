@@ -13,23 +13,23 @@ jarnxmpp.ce.getDigest = function(text) {
 
 jarnxmpp.ce.msgReceived = function (msg) {
     $(msg).find('item').each(function () {
-        var node = $(this).attr('node');
-        var action = $(this).attr('action');
-        var user_jid = $(this).attr('user');
-        var event;
+        var node = $(this).attr('node'),
+            action = $(this).attr('action'),
+            user_jid = $(this).attr('user'),
+            ev;
         if (action === 'focus') {
-            event = $.Event('jarnxmpp.ce.nodeFocus');
-            event.node = node;
-            event.jid = user_jid;
-            $(document).trigger(event);
+            ev = $.Event('jarnxmpp.ce.nodeFocus');
+            ev.node = node;
+            ev.jid = user_jid;
+            $(document).trigger(ev);
         } else if (action === 'user-joined') {
-            event = $.Event('jarnxmpp.ce.userJoined');
-            event.jid = user_jid;
-            $(document).trigger(event);
+            ev = $.Event('jarnxmpp.ce.userJoined');
+            ev.jid = user_jid;
+            $(document).trigger(ev);
         } else if (action === 'user-left') {
-            event = $.Event('jarnxmpp.ce.userLeft');
-            event.jid = user_jid;
-            $(document).trigger(event);
+            ev = $.Event('jarnxmpp.ce.userLeft');
+            ev.jid = user_jid;
+            $(document).trigger(ev);
         }
     });
     return true;
@@ -38,34 +38,37 @@ jarnxmpp.ce.msgReceived = function (msg) {
 jarnxmpp.ce.iqReceived = function (iq) {
     var iq_id = $(iq).attr('id');
     $(iq).find('>patch:first').each(function () {
-        var node = $(this).attr('node');
-        var patch_text = $(this).text();
-        var user_jid = $(this).attr('user');
-        var patches = jarnxmpp.ce.dmp.patch_fromText(patch_text);
-        var shadow = jarnxmpp.ce.shadow_copies[node];
-        var patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow);
+        var node = $(this).attr('node'),
+            patch_text = $(this).text(),
+            user_jid = $(this).attr('user'),
+            patches = jarnxmpp.ce.dmp.patch_fromText(patch_text),
+            shadow = jarnxmpp.ce.shadow_copies[node],
+            patch_applications = jarnxmpp.ce.dmp.patch_apply(patches, shadow),
+            results;
+
         shadow = patch_applications[0];
-        var results = patch_applications[1];
+        results = patch_applications[1];
         $.each(results, function (index, value) {
             if (value!==true) {
                 var response = $iq({type: 'error', to: jarnxmpp.ce.component, id: iq_id})
-                    .c('error', {xmlns: jarnxmpp.ce.NS});
+                    .c('error', {xmlns: jarnxmpp.ce.NS}),
+                    ev;
                 jarnxmpp.connection.send(response);
-                var event = $.Event('jarnxmpp.ce.error');
-                event.text = 'Error applying patch. Resetting text...';
-                $(document).trigger(event);
+                ev = $.Event('jarnxmpp.ce.error');
+                ev.text = 'Error applying patch. Resetting text...';
+                $(document).trigger(ev);
                 jarnxmpp.ce.getShadowCopy(node);
                 return true;
             }
         });
         // Set shadow
         jarnxmpp.ce.shadow_copies[node] = shadow;
-        var event = $.Event('jarnxmpp.ce.applyPatch');
-        event.node = node;
-        event.shadow = shadow;
-        event.patches = patches;
-        event.jid = user_jid;
-        $(document).trigger(event);
+        var ev = $.Event('jarnxmpp.ce.applyPatch');
+        ev.node = node;
+        ev.shadow = shadow;
+        ev.patches = patches;
+        ev.jid = user_jid;
+        $(document).trigger(ev);
         var response = $iq({type: 'result', to: jarnxmpp.ce.component, id: iq_id})
             .c('success', {xmlns: jarnxmpp.ce.NS});
         jarnxmpp.connection.send(response);
@@ -95,18 +98,22 @@ jarnxmpp.ce.getShadowCopy = function(node) {
 };
 
 jarnxmpp.ce.sendPatch = function (event) {
-    var node = event.node;
-    var shadow =  jarnxmpp.ce.shadow_copies[node];
-    var current = event.text;
-    var diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true);
+    var node = event.node,
+        shadow =  jarnxmpp.ce.shadow_copies[node],
+        current = event.text,
+        diff = jarnxmpp.ce.dmp.diff_main(shadow, current, true),
+        patch_list,
+        patch_text,
+        digest,
+        iq;
     if (diff.length<2)
         return false;
     jarnxmpp.ce.dmp.diff_cleanupEfficiency(diff);
-    var patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
-    var patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
+    patch_list = jarnxmpp.ce.dmp.patch_make(shadow, current, diff);
+    patch_text = jarnxmpp.ce.dmp.patch_toText(patch_list);
     jarnxmpp.ce.shadow_copies[node] = current;
-    var digest = jarnxmpp.ce.getDigest(current);
-    var iq = $iq({type: 'set', to: jarnxmpp.ce.component})
+    digest = jarnxmpp.ce.getDigest(current);
+    iq = $iq({type: 'set', to: jarnxmpp.ce.component})
         .c('patch', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest})
         .t(patch_text);
     jarnxmpp.connection.sendIQ(iq,
@@ -121,9 +128,9 @@ jarnxmpp.ce.sendPatch = function (event) {
 };
 
 jarnxmpp.ce.checkDigest = function (node) {
-    var shadow =  jarnxmpp.ce.shadow_copies[node];
-    var digest = jarnxmpp.ce.getDigest(shadow);
-    var iq = $iq({type: 'get', to: jarnxmpp.ce.component})
+    var shadow =  jarnxmpp.ce.shadow_copies[node],
+        digest = jarnxmpp.ce.getDigest(shadow),
+        iq = $iq({type: 'get', to: jarnxmpp.ce.component})
         .c('checksum', {xmlns: jarnxmpp.ce.NS, node: node, digest: digest});
     jarnxmpp.connection.sendIQ(iq,
         function (response) {

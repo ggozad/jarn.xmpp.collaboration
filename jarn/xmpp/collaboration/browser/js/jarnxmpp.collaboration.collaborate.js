@@ -43,8 +43,8 @@ that when the server is flooded with iqs it might disconnect the client. */
 
 jarnxmpp.ce.nodeBlur = function (node_id) {
     if (node_id in jarnxmpp.ce.paused_nodes) return;
-    var now = new Date().getTime();
-    var node = jarnxmpp.ce.idToNode[node_id];
+    var now = new Date().getTime(),
+        node = jarnxmpp.ce.idToNode[node_id];
     if ((now-jarnxmpp.ce.last_update[node]) < 1000.0) {
         $(this).doTimeout('jarnxmpp.ce.delayedNodeChanged', 1000, function() {
             now = new Date().getTime();
@@ -68,15 +68,16 @@ jarnxmpp.ce.nodeBlur = function (node_id) {
 /* Event handler for applyPatch event */
 
 jarnxmpp.ce.onApplyPatch = function (event) {
-    var node = event.node;
-    var content = event.shadow;
-    var patches = event.patches;
-    var user_jid = event.jid;
-    var node_id = jarnxmpp.ce.nodeToId[node];
-    var jqid = jarnxmpp.ce._jqID(node_id);
+    var node = event.node,
+        content = event.shadow,
+        patches = event.patches,
+        user_jid = event.jid,
+        node_id = jarnxmpp.ce.nodeToId[node],
+        jqid = jarnxmpp.ce._jqID(node_id);
     if (jarnxmpp.ce.focused_node === node) {
-        var caret_id = 'caret-' + Math.floor(Math.random()*100000);
-        var selection, bookmark_content;
+        var caret_id = 'caret-' + Math.floor(Math.random()*100000),
+            selection,
+            bookmark_content;
         if (node_id in jarnxmpp.ce.tiny_ids) {
             var editor = window.tinyMCE.getInstanceById(node_id);
             // If we are inside the node as well we need some special care.
@@ -127,8 +128,8 @@ jarnxmpp.ce.onApplyPatch = function (event) {
 /* User joined/left event handlers */
 
 jarnxmpp.ce.onUserJoined = function(event) {
-    var jid = event.jid;
-    var user_id = Strophe.getNodeFromJid(jid);
+    var jid = event.jid,
+        user_id = Strophe.getNodeFromJid(jid);
     if (jid in jarnxmpp.ce.participants) return;
     jarnxmpp.ce.participants[jid] = '';
     jarnxmpp.Presence.getUserInfo(user_id, function(data) {
@@ -144,11 +145,12 @@ jarnxmpp.ce.onUserJoined = function(event) {
 };
 
 jarnxmpp.ce.onUserLeft = function(event) {
-    var jid = event.jid;
-    var user_id = Strophe.getNodeFromJid(jid);
+    var jid = event.jid,
+        user_id = Strophe.getNodeFromJid(jid),
+        participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
     if (!(jid in jarnxmpp.ce.participants)) return;
+
     delete jarnxmpp.ce.participants[jid];
-    var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(jid);
     participant_id = jarnxmpp.ce._jqID(participant_id);
     $(participant_id).remove();
 
@@ -160,7 +162,6 @@ jarnxmpp.ce.onUserLeft = function(event) {
             sticky: false,
             time: 3000,
         });
-
     });
 };
 
@@ -176,11 +177,11 @@ jarnxmpp.ce.ownNodeFocused = function (node) {
 };
 
 jarnxmpp.ce.onNodeFocus = function(event) {
-    var node_id = jarnxmpp.ce.nodeToId[event.node];
-    var participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(event.jid);
+    var node_id = jarnxmpp.ce.nodeToId[event.node],
+        user_id = Strophe.getNodeFromJid(event.jid),
+        participant_id = 'node-participant-' + jarnxmpp.ce._idFromJID(event.jid);
     $('#' + participant_id).remove();
 
-    var user_id = Strophe.getNodeFromJid(event.jid);
     if (node_id !=='') {
         jarnxmpp.Presence.getUserInfo(user_id, function(data) {
             var participant_element = $('<img/>')
@@ -230,13 +231,13 @@ jarnxmpp.ce._setup = function () {
 };
 
 jarnxmpp.ce._setupNode = function (node) {
-    var node_id = jarnxmpp.ce.nodeToId[node];
-    var jqid = jarnxmpp.ce._jqID(node_id);
-    var text = jarnxmpp.ce._getContent(node);
+    var node_id = jarnxmpp.ce.nodeToId[node],
+        jqid = jarnxmpp.ce._jqID(node_id),
+        text = jarnxmpp.ce._getContent(node),
+        editor = window.tinyMCE.getInstanceById(node_id);
     jarnxmpp.ce.shadow_copies[node] = text;
     jarnxmpp.ce.last_update[node] = new Date().getTime();
     jarnxmpp.ce.sendPresence(node);
-    var editor = window.tinyMCE.getInstanceById(node_id);
 
     if (editor!==undefined) {
         jarnxmpp.ce.tiny_ids[node_id] = '';
@@ -268,4 +269,3 @@ $(document).bind('jarnxmpp.connected', function () {
         jarnxmpp.ce._setup();
     }
 });
-
