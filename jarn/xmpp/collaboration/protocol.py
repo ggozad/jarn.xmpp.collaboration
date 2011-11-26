@@ -187,11 +187,10 @@ class DifferentialSyncronisationHandler(XMPPHandler):
             logger.error('Patch %s could not be applied on node %s' % \
                          (diff, node))
             return
-        self.shadow_copies[node] = new_text
         if iq.patch.hasAttribute('digest'):
             digest = iq.patch['digest']
             md5 = hashlib.md5()
-            md5.update(self.shadow_copies[node].encode('utf-8'))
+            md5.update(new_text.encode('utf-8'))
             shadow_digest = md5.hexdigest()
             if shadow_digest!=digest:
                 # There is a mismatch in the node's digest.
@@ -207,6 +206,7 @@ class DifferentialSyncronisationHandler(XMPPHandler):
                     return
                 else:
                     logger.info('MD5 digest did not match. Continue as normal, this is probably due to lag.')
+        self.shadow_copies[node] = new_text
         response = toResponse(iq, u'result')
         response.addElement((NS_CE, u'success',))
         self.xmlstream.send(response)

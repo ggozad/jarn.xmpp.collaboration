@@ -8,7 +8,7 @@ jarnxmpp.ce.shadow_copies = {};
 
 jarnxmpp.ce.getDigest = function(text) {
     // Convert to utf-8 and return the hexdigest
-    return MD5.hexdigest(unescape( encodeURIComponent(text)));
+    return MD5.hexdigest(unescape(encodeURIComponent(text)));
 };
 
 jarnxmpp.ce.msgReceived = function (msg) {
